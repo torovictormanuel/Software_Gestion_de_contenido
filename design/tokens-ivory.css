@@ -1,0 +1,79 @@
+/* =============================================================================
+   HIM Product Media · Tema claro "Ivory & Gold"
+   Usa los MISMOS nombres de variable que el tema oscuro actual (index.html),
+   así que alcanza con reemplazar el bloque :root o activarlo con
+   <html data-theme="ivory">.
+
+   Contraste (WCAG 2.1 AA, texto normal ≥ 4.5:1 sobre #FDFBF7):
+     --text  #1A1A1A  ≈ 16.8:1 ✔     --muted #64748B ≈ 4.6:1 ✔
+     --gold  #C59B27  ≈ 2.5:1  ✘ texto → usar solo en rellenos, bordes e íconos
+     --gold-ink #7A5C0F ≈ 6.0:1 ✔ para texto dorado
+     --on-gold #1A1A1A sobre #C59B27 ≈ 6.7:1 ✔
+     Verde #10B981 y rosa #E1306C no llegan a 4.5:1 como texto: usar las
+     variantes *-ink para texto y los colores base para fondos/puntos.
+   ========================================================================== */
+
+:root[data-theme="ivory"],
+.theme-ivory {
+  color-scheme: light;
+
+  /* Superficies */
+  --bg:        #FDFBF7;   /* Warm Ivory */
+  --panel:     #FFFFFF;   /* tarjetas */
+  --panel2:    #FAF7F0;   /* tarjeta elevada / hover */
+  --sunken:    #F5F1E8;   /* inputs, pistas del timeline */
+  --line:      #E8E2D5;   /* bordes */
+  --line-strong: #D9CFBB;
+
+  /* Texto */
+  --text:      #1A1A1A;   /* Carbón profundo */
+  --muted:     #64748B;   /* Slate */
+  --dim:       #8A93A3;   /* solo textos grandes/decorativos */
+
+  /* Oro */
+  --gold:        #C59B27; /* Champán / oro mate */
+  --gold-light:  #DFB035;
+  --gold-pale:   #F3E5AB;
+  --gold-deep:   #BF953F;
+  --gold-ink:    #7A5C0F; /* texto dorado accesible */
+  --gold-line:   rgba(197, 155, 39, .35);
+  --gold-soft:   rgba(197, 155, 39, .10);
+  --gold-glow:   0 4px 18px rgba(191, 149, 63, .18);
+  --gold-grad:   linear-gradient(135deg, #C59B27, #F3E5AB, #BF953F);
+  --on-gold:     #1A1A1A;
+
+  /* Estados */
+  --success:     #10B981;  /* Listo / Publicado (fondos, puntos) */
+  --success-ink: #047857;
+  --success-soft: rgba(16, 185, 129, .12);
+  --up:          #047857;  /* flecha "subió" */
+  --down:        #B91C1C;  /* flecha "bajó" */
+  --warning:     #B45309;
+  --danger:      #DC2626;
+
+  /* Redes */
+  --youtube:     #2563EB;  /* Azul Royal (≈5.0:1, apto texto) */
+  --youtube-soft: rgba(37, 99, 235, .10);
+  --instagram:   #E1306C;  /* Rosa/Morado IG/TikTok */
+  --instagram-ink: #BE185D;
+  --instagram-soft: rgba(225, 48, 108, .10);
+  --tiktok:      #E1306C;
+  --tiktok-ink:  #BE185D;
+  --sky:         #2563EB;
+
+  /* Elevación */
+  --shadow-sm: 0 1px 2px rgba(26, 26, 26, .05);
+  --shadow-md: 0 4px 16px rgba(26, 26, 26, .06), 0 1px 3px rgba(26, 26, 26, .04);
+  --shadow-lg: 0 18px 48px rgba(26, 26, 26, .10);
+
+  /* Forma y tipografía (sin cambios respecto al tema oscuro) */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --font-display: Outfit, "Plus Jakarta Sans", sans-serif;
+  --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
+  --focus-ring: 0 0 0 3px rgba(197, 155, 39, .45);
+}
+
+/* Fondo explícito para que el tema no dependa del navegador. */
+:root[data-theme="ivory"] body { background: var(--bg); color: var(--text); }

@@ -1,0 +1,1283 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AURA Media Studio</title>
+<meta name="description" content="Gestión, programación y analítica de contenidos para Instagram, TikTok y YouTube.">
+<meta name="theme-color" content="#0B0F19">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          ink: '#0B0F19',
+          panel: '#161B26',
+          panel2: '#1C2230',
+          line: '#262D3D',
+          gold: { DEFAULT: '#D4AF37', light: '#F3E5AB', deep: '#B38728' },
+        },
+        fontFamily: {
+          sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+          display: ['Outfit', '"Plus Jakarta Sans"', 'sans-serif'],
+        },
+      },
+    },
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.52.0/dist/umd/lucide.min.js"></script>
+<style>
+  :root { color-scheme: dark;
+    --bg: #0B0F19;
+    --panel: #161B26;
+    --panel2: #1C2230;
+    --gold: #D4AF37;
+    --gold-light: #F3E5AB;
+    --gold-line: rgba(212, 175, 55, .25);
+    --gold-grad: linear-gradient(135deg, #BF953F, #FCF6BA 35%, #B38728 65%, #FBF5B7);
+    --text: #ECE9E1;
+    --muted: #9AA0AE;
+  }
+  html { -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--text); overflow-x: clip; }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1;
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(212,175,55,.09), transparent 60%),
+      radial-gradient(700px 500px at -10% 30%, rgba(191,149,63,.05), transparent 60%);
+  }
+  .font-display { letter-spacing: -.01em; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #2A3142; border-radius: 99px; }
+
+  .glass { background: rgba(11, 15, 25, .72); backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%); }
+  .card { background: var(--panel); border: 1px solid rgba(212,175,55,.18); border-radius: 20px; transition: border-color .3s, box-shadow .3s, transform .3s; }
+  .card-hover:hover { border-color: rgba(212,175,55,.45); box-shadow: 0 4px 20px rgba(212,175,55,.15); transform: translateY(-2px); }
+  .gold-text { background: var(--gold-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .btn-gold {
+    background: var(--gold-grad); background-size: 220% 220%; background-position: 0% 50%;
+    color: #1A1405; font-weight: 700; border-radius: 14px; min-height: 44px;
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    padding: 0 1.15rem; white-space: nowrap; transition: background-position .5s, box-shadow .3s, transform .2s;
+    box-shadow: 0 2px 14px rgba(212,175,55,.18);
+  }
+  .btn-gold:hover { background-position: 100% 50%; box-shadow: 0 6px 26px rgba(212,175,55,.32); }
+  .btn-gold:active { transform: scale(.97); }
+  .btn-gold:disabled { opacity: .6; cursor: progress; }
+  .btn-ghost {
+    min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    padding: 0 1rem; border-radius: 14px; border: 1px solid var(--gold-line); color: var(--text);
+    background: rgba(255,255,255,.02); transition: .3s; font-weight: 600;
+  }
+  .btn-ghost:hover { border-color: rgba(212,175,55,.6); color: var(--gold-light); box-shadow: 0 4px 20px rgba(212,175,55,.12); }
+  .icon-btn {
+    width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 12px; color: var(--muted); transition: .3s; border: 1px solid transparent;
+  }
+  .icon-btn:hover { color: var(--gold-light); background: rgba(212,175,55,.08); border-color: rgba(212,175,55,.3); }
+  .icon-btn.danger:hover { color: #FCA5A5; background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.35); }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 10px; }
+
+  .seg { display: inline-flex; padding: 4px; gap: 2px; border-radius: 16px; background: rgba(255,255,255,.03); border: 1px solid rgba(212,175,55,.18); }
+  .seg button { min-height: 40px; padding: 0 .95rem; border-radius: 12px; font-size: .85rem; font-weight: 600; color: var(--muted); display: inline-flex; align-items: center; gap: .45rem; transition: .3s; white-space: nowrap; }
+  .seg button:hover { color: var(--text); }
+  .seg button[aria-pressed="true"] { background: rgba(212,175,55,.14); color: var(--gold-light); box-shadow: inset 0 0 0 1px rgba(212,175,55,.45); }
+
+  .chip { min-height: 40px; padding: 0 .9rem; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--muted); border: 1px solid #262D3D; display: inline-flex; align-items: center; gap: .45rem; transition: .3s; white-space: nowrap; background: rgba(255,255,255,.02); }
+  .chip:hover { border-color: rgba(212,175,55,.45); color: var(--text); }
+  .chip[aria-pressed="true"] { border-color: rgba(212,175,55,.7); color: #1A1405; background: var(--gold-grad); }
+  .chip .count { font-size: .7rem; padding: 1px 7px; border-radius: 99px; background: rgba(255,255,255,.07); }
+  .chip[aria-pressed="true"] .count { background: rgba(0,0,0,.15); }
+
+  .badge { display: inline-flex; align-items: center; gap: .35rem; font-size: 11px; font-weight: 700; padding: .32rem .62rem; border-radius: 999px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); letter-spacing: .02em; }
+  .badge svg { width: 13px; height: 13px; }
+  .badge-draft { background: rgba(23,23,23,.78); color: #CFCBC0; border: 1px solid rgba(212,175,55,.3); }
+  .badge-scheduled { background: rgba(4,47,36,.82); color: #6EE7B7; border: 1px solid rgba(52,211,153,.5); }
+  .badge-published { background: rgba(33,27,9,.82); color: #F3E5AB; border: 1px solid rgba(212,175,55,.6); }
+  .net-badge { display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .6rem .3rem .3rem; border-radius: 999px; background: rgba(11,15,25,.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: 11px; font-weight: 700; color: #fff; border: 1px solid rgba(255,255,255,.12); }
+  .net-dot { width: 22px; height: 22px; border-radius: 99px; display: inline-flex; align-items: center; justify-content: center; color: #fff; }
+  .net-dot svg { width: 13px; height: 13px; }
+
+  .input { width: 100%; min-height: 46px; background: #10141F; border: 1px solid #262D3D; border-radius: 14px; padding: .7rem .95rem; color: var(--text); transition: .3s; font-size: .95rem; }
+  .input::placeholder { color: #5D6475; }
+  .input:focus { outline: none; border-color: rgba(212,175,55,.65); box-shadow: 0 0 0 4px rgba(212,175,55,.1); }
+  .input[aria-invalid="true"] { border-color: rgba(248,113,113,.7); }
+  input[type="date"].input, input[type="time"].input { color-scheme: dark; }
+  .label { font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #B9B4A6; margin-bottom: .5rem; display: block; }
+
+  .switch { position: relative; width: 56px; height: 32px; border-radius: 99px; background: #262D3D; transition: .3s; flex-shrink: 0; }
+  .switch::after { content: ""; position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 99px; background: #8A90A0; transition: .3s; }
+  .switch[aria-checked="true"] { background: var(--gold-grad); }
+  .switch[aria-checked="true"]::after { left: 28px; background: #1A1405; }
+
+  .dropzone { border: 1.5px dashed rgba(212,175,55,.35); border-radius: 18px; background: rgba(212,175,55,.03); transition: .3s; }
+  .dropzone.drag { border-color: var(--gold); background: rgba(212,175,55,.09); box-shadow: 0 0 0 6px rgba(212,175,55,.08); }
+
+  .overlay { position: fixed; inset: 0; z-index: 60; background: rgba(4,6,12,.66); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: flex; align-items: flex-end; justify-content: center; animation: fade .25s ease; }
+  @media (min-width: 768px) { .overlay { align-items: center; padding: 1.5rem; } }
+  .sheet { width: 100%; max-height: 94vh; overflow-y: auto; background: #121722; border: 1px solid rgba(212,175,55,.25); border-bottom: 0; border-radius: 28px 28px 0 0; box-shadow: 0 -10px 60px rgba(0,0,0,.5); animation: up .35s cubic-bezier(.2,.8,.2,1); overscroll-behavior: contain; }
+  @media (min-width: 768px) { .sheet { border-radius: 28px; border-bottom: 1px solid rgba(212,175,55,.25); max-height: 90vh; animation: pop .3s cubic-bezier(.2,.8,.2,1); } }
+  .sheet-head { position: sticky; top: 0; z-index: 5; background: rgba(18,23,34,.86); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  .grabber { width: 44px; height: 5px; border-radius: 99px; background: #343B4C; margin: 10px auto 0; }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes up { from { transform: translateY(40px); opacity: 0; } }
+  @keyframes pop { from { transform: scale(.96); opacity: 0; } }
+  @keyframes rise { from { transform: translateY(10px); opacity: 0; } }
+  .rise { animation: rise .45s cubic-bezier(.2,.8,.2,1) both; }
+  .spin { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  .shimmer-line { height: 2px; background: linear-gradient(90deg, transparent, rgba(212,175,55,.8), transparent); background-size: 200% 100%; animation: shimmer 3s linear infinite; }
+
+  /* Phone mockup */
+  .phone { width: 272px; aspect-ratio: 9 / 19.5; border-radius: 44px; padding: 10px; background: linear-gradient(145deg, #2a2a2a, #050505); box-shadow: 0 0 0 1px rgba(212,175,55,.45), 0 30px 80px rgba(0,0,0,.6), 0 0 60px rgba(212,175,55,.12); position: relative; flex-shrink: 0; }
+  .phone-screen { width: 100%; height: 100%; border-radius: 34px; overflow: hidden; position: relative; background: #000; color: #fff; font-size: 12px; }
+  .phone-notch { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); width: 84px; height: 24px; background: #000; border-radius: 99px; z-index: 20; }
+  .phone-scroll { height: 100%; overflow-y: auto; scrollbar-width: none; }
+  .phone-scroll::-webkit-scrollbar { display: none; }
+  .clamp-1, .clamp-2, .clamp-3 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+  .clamp-1 { -webkit-line-clamp: 1; } .clamp-2 { -webkit-line-clamp: 2; } .clamp-3 { -webkit-line-clamp: 3; }
+
+  .cal-cell { min-height: 64px; }
+  @media (min-width: 768px) { .cal-cell { min-height: 118px; } }
+
+  .bottom-nav { padding-bottom: env(safe-area-inset-bottom); }
+  .fab { bottom: calc(84px + env(safe-area-inset-bottom)); }
+  .skip { position: absolute; left: -999px; top: 8px; z-index: 100; }
+  .skip:focus { left: 8px; background: var(--gold); color: #000; padding: .6rem 1rem; border-radius: 10px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+<a href="#main" class="skip">Saltar al contenido</a>
+
+<!-- Global SVG defs (gradientes reutilizables para gráficos) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FCF6BA"/><stop offset=".5" stop-color="#D4AF37"/><stop offset="1" stop-color="#B38728"/>
+    </linearGradient>
+    <linearGradient id="gGoldH" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#BF953F"/><stop offset=".5" stop-color="#FCF6BA"/><stop offset="1" stop-color="#B38728"/>
+    </linearGradient>
+    <linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D4AF37" stop-opacity=".35"/><stop offset="1" stop-color="#D4AF37" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<!-- HEADER -->
+<header class="glass sticky z-40 border-b" style="top:env(safe-area-inset-top,0px);border-color:rgba(212,175,55,.15)">
+  <div class="mx-auto max-w-[1440px] px-4 md:px-8 h-16 md:h-20 flex items-center gap-4">
+    <a href="#" class="flex items-center gap-3 shrink-0" aria-label="AURA Media, inicio">
+      <span class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:var(--gold-grad);box-shadow:0 4px 20px rgba(212,175,55,.3)">
+        <i data-lucide="gem" class="w-5 h-5" style="color:#1A1405"></i>
+      </span>
+      <span class="leading-tight">
+        <span class="font-display text-lg md:text-xl font-semibold tracking-[.18em] gold-text">AURA</span>
+        <span class="block text-[10px] tracking-[.32em] text-[#8B8676] -mt-0.5">MEDIA STUDIO</span>
+      </span>
+    </a>
+    <nav id="netFilterDesktop" class="seg hidden lg:inline-flex ml-6" aria-label="Filtrar por red social"></nav>
+    <div class="ml-auto flex items-center gap-1.5 md:gap-3">
+      <button class="btn-gold hidden md:inline-flex" data-action="create"><i data-lucide="plus" class="w-4 h-4"></i>Crear Publicación</button>
+      <div class="relative">
+        <button class="icon-btn relative" data-action="notif" aria-label="Notificaciones (3 nuevas)" aria-haspopup="true" aria-expanded="false" id="bellBtn">
+          <i data-lucide="bell" class="w-5 h-5"></i>
+          <span class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full" style="background:#D4AF37;box-shadow:0 0 0 3px #0B0F19"></span>
+        </button>
+        <div id="notifPanel" class="hidden absolute right-0 top-14 w-[min(92vw,360px)] card p-2 shadow-2xl z-50" role="menu"></div>
+      </div>
+      <button class="flex items-center gap-3 rounded-2xl pl-1 pr-1 md:pr-3 min-h-[44px] border border-transparent hover:border-[rgba(212,175,55,.3)] transition" data-action="profile" aria-label="Perfil: AURA Media, en línea">
+        <span class="relative">
+          <span class="w-10 h-10 rounded-full flex items-center justify-center font-display font-semibold text-sm" style="background:#1C2230;box-shadow:0 0 0 2px rgba(212,175,55,.6);color:#F3E5AB">AM</span>
+          <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400" style="box-shadow:0 0 0 2px #0B0F19"></span>
+        </span>
+        <span class="hidden xl:block text-left leading-tight">
+          <span class="block text-sm font-semibold">AURA Media</span>
+          <span class="block text-[11px] text-[#D4AF37]">Plan Prestige</span>
+        </span>
+      </button>
+    </div>
+  </div>
+  <div class="lg:hidden px-4 pb-3">
+    <div id="netFilterMobile" class="flex gap-2 overflow-x-auto no-scrollbar" role="group" aria-label="Filtrar por red social"></div>
+  </div>
+  <div class="shimmer-line opacity-40"></div>
+</header>
+
+<main id="main" class="mx-auto max-w-[1440px] px-4 md:px-8 pt-6 md:pt-8 pb-36 md:pb-14">
+  <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
+    <div>
+      <p class="text-xs tracking-[.28em] uppercase text-[#8B8676]" id="todayLabel"></p>
+      <h1 class="font-display text-2xl md:text-4xl font-semibold mt-1">Panel de <span class="gold-text">Contenidos</span></h1>
+    </div>
+    <p class="text-sm text-[#9AA0AE] max-w-md" id="headline"></p>
+  </div>
+
+  <section id="kpis" class="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-5" aria-label="Métricas globales"></section>
+
+  <section class="mt-8 md:mt-10 flex flex-col gap-4" aria-label="Controles de publicaciones">
+    <div class="flex flex-wrap items-center gap-3 justify-between">
+      <h2 class="font-display text-xl md:text-2xl font-semibold" id="viewTitle">Publicaciones</h2>
+      <div class="flex items-center gap-3 w-full md:w-auto">
+        <label class="relative flex-1 md:w-72">
+          <span class="sr-only">Buscar publicaciones</span>
+          <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B7180]"></i>
+          <input id="search" type="search" class="input pl-10" placeholder="Buscar por título o caption…" autocomplete="off">
+        </label>
+        <div id="viewSwitch" class="seg hidden md:inline-flex" role="group" aria-label="Cambiar vista"></div>
+      </div>
+    </div>
+    <div id="statusChips" class="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0" role="group" aria-label="Filtrar por estado"></div>
+  </section>
+
+  <section id="view" class="mt-6" aria-live="polite"></section>
+</main>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="bottom-nav md:hidden fixed bottom-0 inset-x-0 z-40 glass border-t" style="border-color:rgba(212,175,55,.2)" aria-label="Navegación principal">
+  <div id="bottomNav" class="grid grid-cols-4 h-[68px]"></div>
+</nav>
+<button class="fab md:hidden fixed right-4 z-40 w-14 h-14 rounded-2xl flex items-center justify-center" style="background:var(--gold-grad);box-shadow:0 10px 30px rgba(212,175,55,.35)" data-action="create" aria-label="Crear publicación">
+  <i data-lucide="plus" class="w-6 h-6" style="color:#1A1405"></i>
+</button>
+
+<div id="modalRoot"></div>
+<div id="toasts" class="fixed z-[70] left-1/2 -translate-x-1/2 bottom-[96px] md:bottom-8 flex flex-col gap-2 items-center w-[min(92vw,420px)]" aria-live="polite"></div>
+
+<script>
+/* =========================================================
+   Utilidades
+   ========================================================= */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+const MES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MES_L = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+const DIAS_L = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const toISO = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fmtDate = iso => { const d = new Date(iso); return `${d.getDate()} ${MES[d.getMonth()]}, ${d.getFullYear()} - ${pad(d.getHours())}:${pad(d.getMinutes())} HS`; };
+const fmtTime = iso => { const d = new Date(iso); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const fmtN = n => {
+  if (n == null) return '—';
+  if (n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 0 : 1).replace(/\.0$/, '') + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(n >= 1e5 ? 0 : 1).replace(/\.0$/, '') + 'K';
+  return String(Math.round(n));
+};
+const fmtMoney = n => n >= 1000 ? '$' + (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K' : '$' + Math.round(n);
+const fmtDur = s => s >= 3600 ? `${Math.floor(s/3600)}:${pad(Math.floor(s%3600/60))}:${pad(s%60)}` : `${Math.floor(s/60)}:${pad(Math.round(s%60))}`;
+const TODAY = new Date();
+const rel = (days, hm) => { const d = new Date(TODAY); d.setDate(d.getDate() + days); const [h, m] = hm.split(':'); d.setHours(+h, +m, 0, 0); return toISO(d); };
+const relLabel = iso => {
+  const diff = new Date(iso) - new Date();
+  const h = Math.round(Math.abs(diff) / 36e5), d = Math.round(Math.abs(diff) / 864e5);
+  if (diff > 0) return h < 24 ? `Sale en ${Math.max(h,1)} h` : d === 1 ? 'Sale mañana' : `Sale en ${d} días`;
+  return h < 24 ? `Hace ${Math.max(h,1)} h` : d === 1 ? 'Ayer' : `Hace ${d} días`;
+};
+const U = id => `img/${id}.jpg`;
+const PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1C2230"/><stop offset="1" stop-color="#0B0F19"/></linearGradient></defs><rect width="400" height="500" fill="url(#g)"/><text x="200" y="262" font-family="Outfit,sans-serif" font-size="40" fill="#D4AF37" text-anchor="middle" letter-spacing="10">AURA</text></svg>');
+
+/* =========================================================
+   Redes, formatos y datos de referencia
+   ========================================================= */
+const SVG = {
+  instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.6" cy="6.4" r="1.1" fill="currentColor" stroke="none"/></svg>',
+  tiktok: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.6 6.7a4.8 4.8 0 0 1-3.8-4.2V2h-3.4v13.7a2.9 2.9 0 0 1-5.2 1.7 2.9 2.9 0 0 1 3.2-4.5V9.4a6.3 6.3 0 0 0-5.4 10.7 6.3 6.3 0 0 0 10.8-4.4V8.7a8.2 8.2 0 0 0 4.8 1.5V6.8z"/></svg>',
+  youtube: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4l6.2 3.6-6.2 3.6z"/></svg>',
+};
+const NET = {
+  instagram: { label: 'Instagram', grad: 'linear-gradient(45deg,#F58529,#DD2A7B 50%,#8134AF)', color: '#E1306C', cpm: 6.5 },
+  tiktok:    { label: 'TikTok',    grad: 'linear-gradient(135deg,#25F4EE 0%,#111 40%,#111 60%,#FE2C55 100%)', color: '#25F4EE', cpm: 3.2 },
+  youtube:   { label: 'YouTube',   grad: 'linear-gradient(135deg,#FF0000,#B30000)', color: '#FF4040', cpm: 9.5 },
+};
+const FORMATS = {
+  ig_reel:  { net: 'instagram', label: 'Reel',        full: 'Instagram Reels', vertical: true,  video: true },
+  ig_post:  { net: 'instagram', label: 'Post',        full: 'Instagram Post',  vertical: false, video: false },
+  tiktok:   { net: 'tiktok',    label: 'Video',       full: 'TikTok',          vertical: true,  video: true },
+  yt_short: { net: 'youtube',   label: 'Short',       full: 'YouTube Shorts',  vertical: true,  video: true },
+  yt_long:  { net: 'youtube',   label: 'Video largo', full: 'YouTube Long',    vertical: false, video: true, wide: true },
+};
+// Promedios históricos del canal (base de comparación)
+const BASE = {
+  instagram: { views: 142000, er: 8.9, saves: 2600, shares: 1500, ctr: 3.4, ret: 61, followers: 900 },
+  tiktok:    { views: 720000, er: 9.4, saves: 9800, shares: 7600, ctr: 2.5, ret: 66, followers: 3100 },
+  youtube:   { views: 210000, er: 6.3, saves: 1900, shares: 1100, ctr: 6.2, ret: 55, followers: 1500 },
+};
+const PREV_ER = { all: 9.2, instagram: 9.6, tiktok: 10.1, youtube: 6.9 };
+const GOAL = { all: 25000, instagram: 9000, tiktok: 10000, youtube: 12000 };
+const SLOTS = [6, 9, 12, 15, 18, 21, 0];
+const HOURS = {
+  instagram: [6.2, 8.1, 9.4, 8.7, 10.6, 11.2, 7.5],
+  tiktok:    [7.1, 8.0, 9.2, 9.8, 10.9, 11.6, 10.2],
+  youtube:   [4.8, 5.6, 6.4, 7.3, 7.9, 7.4, 5.2],
+};
+const SUGGEST = {
+  instagram: ['luxurylifestyle', 'reels', 'aesthetic', 'oldmoney', 'contentcreator', 'explorepage', 'minimalismo', 'inspiración'],
+  tiktok: ['fyp', 'parati', 'viral', 'lifestyle', 'storytime', 'tendencias', 'luxury', 'tiktokargentina'],
+  youtube: ['shorts', 'vlog', 'review', 'tutorial', 'emprendimiento', '4k', 'luxury', 'youtubeshorts'],
+};
+const STATUS = {
+  draft:     { label: 'Borrador',   cls: 'badge-draft',     icon: 'pencil-line' },
+  scheduled: { label: 'Programado', cls: 'badge-scheduled', icon: 'clock' },
+  published: { label: 'Publicado',  cls: 'badge-published', icon: 'circle-check' },
+};
+
+/* =========================================================
+   Mock data
+   ========================================================= */
+let POSTS = [
+  { id: 'p1', format: 'ig_reel', status: 'published', date: rel(-6, '08:30'), title: 'Rutina matutina de un CEO',
+    caption: '5:30 AM. Sin teléfono la primera hora, journaling, entrenamiento y un espresso doble. Así arranco los días en los que todo tiene que salir perfecto. ¿Cuál es tu hábito innegociable?',
+    hashtags: ['morningroutine', 'productividad', 'luxurylifestyle', 'ceo'], img: U('photo-1499951360447-b19be8fe80f5'), duration: 30,
+    m: { views: 284500, likes: 21840, comments: 1120, shares: 3410, saves: 5870, ctr: 4.2, retPct: 68, followers: 1840 } },
+  { id: 'p2', format: 'tiktok', status: 'published', date: rel(-4, '21:00'), title: '3 trucos de estilo old money',
+    caption: 'No es lo que cuesta, es cómo lo llevás. Paleta neutra, texturas nobles y cero logos visibles. Guardalo para tu próxima compra.',
+    hashtags: ['oldmoney', 'estilo', 'fyp', 'moda'], img: U('photo-1515886657613-9f3515b0c78f'), duration: 24,
+    m: { views: 1240000, likes: 98400, comments: 3210, shares: 12800, saves: 15600, ctr: 2.8, retPct: 74, followers: 6420 } },
+  { id: 'p3', format: 'yt_long', status: 'published', date: rel(-9, '18:00'), title: 'Review: el reloj de lujo más infravalorado',
+    caption: 'Dos meses usándolo todos los días. Acabado, movimiento, valor de reventa y por qué creo que es la mejor compra por debajo de los 10K. Capítulos en la descripción.',
+    hashtags: ['relojes', 'review', 'luxury', 'watches'], img: U('photo-1523275335684-37898b6baf30'), duration: 860,
+    m: { views: 186300, likes: 9870, comments: 1430, shares: 820, saves: 2100, ctr: 7.9, retPct: 52, followers: 2310 } },
+  { id: 'p4', format: 'ig_post', status: 'published', date: rel(-3, '12:00'), title: 'Colección Otoño · Lookbook',
+    caption: 'Capas, camel y lana merino. Seis looks pensados para la transición de estación, todos con piezas que vas a usar durante años.',
+    hashtags: ['lookbook', 'otoño', 'aesthetic', 'quietluxury'], img: U('photo-1490481651871-ab68de25d43d'), duration: 0,
+    m: { views: 96400, likes: 7320, comments: 410, shares: 380, saves: 1960, ctr: 3.1, retPct: null, followers: 520 } },
+  { id: 'p5', format: 'yt_short', status: 'published', date: rel(-2, '15:00'), title: 'Café de especialidad en 30 segundos',
+    caption: 'V60, 15 g de café, 250 ml a 93°C y paciencia. El ritual que cambia tu mañana.',
+    hashtags: ['shorts', 'café', 'barista', 'ritual'], img: U('photo-1495474472287-4d71bcdd2085'), duration: 30,
+    m: { views: 412000, likes: 26300, comments: 690, shares: 1820, saves: 2400, ctr: 5.4, retPct: 81, followers: 1280 } },
+  { id: 'p6', format: 'tiktok', status: 'published', date: rel(-1, '19:30'), title: 'Un día en Lago di Como',
+    caption: 'Desayuno frente al lago, paseo en Riva y atardecer en Bellagio. Te dejo la ruta completa en los comentarios.',
+    hashtags: ['italia', 'travel', 'lagodicomo', 'parati'], img: U('photo-1476514525535-07fb3b4ae5f1'), duration: 45,
+    m: { views: 638000, likes: 54100, comments: 1870, shares: 7400, saves: 11200, ctr: 3.0, retPct: 71, followers: 3950 } },
+  { id: 'p7', format: 'ig_reel', status: 'scheduled', date: rel(2, '18:30'), title: 'Setup minimalista de escritorio',
+    caption: 'Menos objetos, más foco. Te muestro cada pieza de mi escritorio y por qué está ahí.',
+    hashtags: ['desksetup', 'minimalismo', 'productividad'], img: U('photo-1498050108023-c5249f4df085'), duration: 28, m: null },
+  { id: 'p8', format: 'yt_long', status: 'scheduled', date: rel(5, '17:00'), title: 'Cómo construí una marca de 7 cifras',
+    caption: 'Los primeros 18 meses, los errores que costaron caro y el sistema de contenidos que hoy genera clientes todos los días.',
+    hashtags: ['emprendimiento', 'negocios', 'marcapersonal'], img: U('photo-1522202176988-66273c2fd55f'), duration: 1340, m: null },
+  { id: 'p9', format: 'tiktok', status: 'scheduled', date: rel(7, '20:00'), title: 'Unboxing: auriculares premium',
+    caption: 'Cancelación de ruido, cuero vegano y 40 h de batería. ¿Valen lo que cuestan? Primeras impresiones sin filtro.',
+    hashtags: ['unboxing', 'tech', 'fyp'], img: U('photo-1505740420928-5e560c06d30e'), duration: 38, m: null },
+  { id: 'p10', format: 'ig_post', status: 'scheduled', date: rel(11, '18:30'), title: 'Cena de autor en casa',
+    caption: 'Menú de tres pasos para impresionar sin pasar el día en la cocina. Receta completa en el carrusel.',
+    hashtags: ['foodie', 'recetas', 'homechef'], img: U('photo-1504674900247-0877df9cc836'), duration: 0, m: null },
+  { id: 'p11', format: 'yt_short', status: 'scheduled', date: rel(15, '07:00'), title: 'Entrenamiento express de 5 minutos',
+    caption: 'Sin equipamiento, sin excusas. Cinco ejercicios para activar todo el cuerpo antes de trabajar.',
+    hashtags: ['shorts', 'fitness', 'workout'], img: U('photo-1571019613454-1cb2f99b2d8b'), duration: 45, m: null },
+  { id: 'p12', format: 'tiktok', status: 'draft', date: rel(18, '21:00'), title: 'Sneakers que valen la inversión',
+    caption: 'Tres pares que duran años y combinan con todo. Spoiler: ninguno es el más caro.',
+    hashtags: ['sneakers', 'moda'], img: U('photo-1542291026-7eec264c27ff'), duration: 32, m: null },
+  { id: 'p13', format: 'ig_reel', status: 'draft', date: rel(22, '22:00'), title: 'Skincare nocturno en 4 pasos',
+    caption: 'Doble limpieza, sérum, contorno y crema. Lo que realmente uso, sin publicidad.',
+    hashtags: ['skincare', 'selfcare'], img: U('photo-1556228578-8c89e6adf883'), duration: 40, m: null },
+  { id: 'p14', format: 'yt_long', status: 'draft', date: rel(25, '16:00'), title: 'Viaje a los Alpes en 4K',
+    caption: 'Cinematic travel film: Zermatt, Grindelwald y el Glacier Express. Ponete auriculares.',
+    hashtags: ['4k', 'travel', 'alpes', 'cinematic'], img: U('photo-1506905925346-21bda4d32df4'), duration: 720, m: null },
+];
+
+/* =========================================================
+   Estado
+   ========================================================= */
+const state = {
+  posts: POSTS,
+  network: 'all',
+  status: 'all',
+  view: 'grid',
+  search: '',
+  calMode: 'month',
+  calCursor: new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate()),
+  selDay: dayKey(TODAY),
+  sort: { key: 'date', dir: -1 },
+  form: null,
+  lastFocus: null,
+};
+
+const netOf = p => FORMATS[p.format].net;
+const er = p => p.m ? (p.m.likes + p.m.comments + p.m.shares + p.m.saves) / p.m.views * 100 : 0;
+const byNetwork = list => list.filter(p => state.network === 'all' || netOf(p) === state.network);
+function filtered() {
+  const q = state.search.trim().toLowerCase();
+  return byNetwork(state.posts)
+    .filter(p => state.status === 'all' || p.status === state.status)
+    .filter(p => !q || (p.title + ' ' + p.caption + ' ' + p.hashtags.join(' ')).toLowerCase().includes(q))
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+/* =========================================================
+   Componentes pequeños
+   ========================================================= */
+const ico = (name, cls = 'w-4 h-4') => `<i data-lucide="${name}" class="${cls}"></i>`;
+const netDot = (n, size = 22) => `<span class="net-dot" style="background:${NET[n].grad};width:${size}px;height:${size}px">${SVG[n]}</span>`;
+const netBadge = p => `<span class="net-badge">${netDot(netOf(p))}${FORMATS[p.format].label}</span>`;
+const statusBadge = s => `<span class="badge ${STATUS[s].cls}">${ico(STATUS[s].icon)}${STATUS[s].label}</span>`;
+function mediaEl(p, cls) {
+  if (p.media && p.media.type.startsWith('video')) return `<video src="${esc(p.media.url)}" class="${cls}" muted loop playsinline autoplay preload="metadata"></video>`;
+  return `<img src="${esc(p.media ? p.media.url : (p.img || PLACEHOLDER))}" class="${cls}" alt="" loading="lazy" decoding="async">`;
+}
+function sparkline(values, w = 120, h = 36) {
+  if (values.length < 2) return '';
+  const max = Math.max(...values), min = Math.min(...values);
+  const pts = values.map((v, i) => [i / (values.length - 1) * w, h - 4 - (v - min) / ((max - min) || 1) * (h - 8)]);
+  const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h}" class="w-full h-9" preserveAspectRatio="none" aria-hidden="true">
+    <path d="${d} L${w} ${h} L0 ${h}Z" fill="url(#gArea)"/><path d="${d}" fill="none" stroke="url(#gGoldH)" stroke-width="2" stroke-linecap="round"/></svg>`;
+}
+
+/* =========================================================
+   Header: filtro de redes
+   ========================================================= */
+function renderNetFilter() {
+  const opts = [['all', 'Todas'], ['instagram', 'Instagram'], ['tiktok', 'TikTok'], ['youtube', 'YouTube']];
+  const icon = k => k === 'all' ? ico('layers', 'w-4 h-4') : `<span class="w-4 h-4 inline-flex">${SVG[k]}</span>`;
+  $('#netFilterDesktop').innerHTML = opts.map(([k, l]) =>
+    `<button data-action="net" data-net="${k}" aria-pressed="${state.network === k}">${icon(k)}${l}</button>`).join('');
+  $('#netFilterMobile').innerHTML = opts.map(([k, l]) =>
+    `<button class="chip" data-action="net" data-net="${k}" aria-pressed="${state.network === k}">${icon(k)}${l}</button>`).join('');
+}
+
+/* =========================================================
+   KPIs
+   ========================================================= */
+function renderKPIs() {
+  const ps = byNetwork(state.posts);
+  const pub = ps.filter(p => p.status === 'published').sort((a, b) => new Date(a.date) - new Date(b.date));
+  const sch = ps.filter(p => p.status === 'scheduled'), dr = ps.filter(p => p.status === 'draft');
+  const avgER = pub.length ? pub.reduce((a, p) => a + er(p), 0) / pub.length : 0;
+  const delta = avgER - PREV_ER[state.network];
+  const reach = pub.reduce((a, p) => a + p.m.views, 0);
+  const impressions = Math.round(reach * 1.38);
+  const earned = pub.reduce((a, p) => a + p.m.views / 1000 * NET[netOf(p)].cpm, 0);
+  const projected = sch.reduce((a, p) => a + BASE[netOf(p)].views / 1000 * NET[netOf(p)].cpm, 0);
+  const goal = GOAL[state.network];
+  const goalPct = Math.min(100, (earned + projected) / goal * 100);
+  const totalPlan = sch.length + pub.length;
+  const pubPct = totalPlan ? pub.length / totalPlan * 100 : 0;
+
+  const card = (i, icon, label, value, body) => `
+    <article class="card card-hover p-4 md:p-5 rise" style="animation-delay:${i * 60}ms">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-[10px] md:text-[11px] font-bold tracking-[.14em] uppercase text-[#9AA0AE] leading-tight">${label}</span>
+        <span class="w-9 h-9 rounded-xl hidden sm:flex items-center justify-center shrink-0" style="background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.25);color:#D4AF37">${ico(icon, 'w-4 h-4')}</span>
+      </div>
+      <div class="font-display text-2xl md:text-[34px] font-semibold mt-2 md:mt-3 leading-none">${value}</div>
+      <div class="mt-3 text-xs text-[#9AA0AE]">${body}</div>
+    </article>`;
+
+  $('#kpis').innerHTML = [
+    card(0, 'calendar-check', 'Programados vs Publicados',
+      `<span class="text-emerald-300">${sch.length}</span><span class="text-[#4B5263] mx-1.5">/</span><span class="gold-text">${pub.length}</span>`,
+      `<div class="h-1.5 rounded-full bg-[#262D3D] overflow-hidden flex"><span style="width:${pubPct}%;background:var(--gold-grad)"></span><span style="width:${100 - pubPct}%" class="bg-emerald-500/70"></span></div>
+       <div class="mt-2 flex justify-between gap-2"><span>${dr.length} borradores</span><span class="hidden sm:inline">${Math.round(pubPct)}% publicado</span></div>`),
+    card(1, 'heart-pulse', 'Engagement promedio',
+      `${avgER.toFixed(1)}<span class="text-lg text-[#9AA0AE]">%</span>`,
+      `<span class="inline-flex items-center gap-1 font-semibold ${delta >= 0 ? 'text-[#F3E5AB]' : 'text-red-300'}">${ico(delta >= 0 ? 'trending-up' : 'trending-down', 'w-3.5 h-3.5')}${delta >= 0 ? '+' : ''}${delta.toFixed(1)}%</span> vs mes anterior`),
+    card(2, 'radar', 'Alcance / Impresiones',
+      `${fmtN(reach)}`,
+      `<div class="-mt-1 mb-1">${sparkline(pub.map(p => p.m.views))}</div><span class="text-[#C9C3B0]">${fmtN(impressions)}</span> impresiones totales`),
+    card(3, 'gem', 'Rendimiento est. del mes',
+      `<span class="gold-text">${fmtMoney(earned + projected)}</span>`,
+      `<div class="h-1.5 rounded-full bg-[#262D3D] overflow-hidden"><span class="block h-full" style="width:${goalPct}%;background:var(--gold-grad)"></span></div>
+       <div class="mt-2 flex justify-between gap-2"><span>${fmtMoney(earned)} generado</span><span class="hidden sm:inline">Meta ${fmtMoney(goal)}</span></div>`),
+  ].join('');
+
+  const best = pub.slice().sort((a, b) => er(b) - er(a))[0];
+  $('#headline').innerHTML = best
+    ? `${ico('sparkles', 'w-4 h-4 inline -mt-0.5 text-[#D4AF37]')} Top del período: <span class="text-[#F3E5AB] font-semibold">${esc(best.title)}</span> con ${er(best).toFixed(1)}% de engagement.`
+    : 'Todavía no hay publicaciones publicadas en esta red.';
+}
+
+/* =========================================================
+   Toolbar
+   ========================================================= */
+const VIEWS = [['grid', 'layout-grid', 'Grid'], ['calendar', 'calendar-days', 'Calendario'], ['analytics', 'chart-column', 'Analíticas']];
+function renderToolbar() {
+  $('#viewSwitch').innerHTML = VIEWS.map(([k, i, l]) => `<button data-action="view" data-view="${k}" aria-pressed="${state.view === k}">${ico(i)}${l}</button>`).join('');
+  $('#bottomNav').innerHTML = VIEWS.map(([k, i, l]) => `
+    <button data-action="view" data-view="${k}" aria-pressed="${state.view === k}" class="flex flex-col items-center justify-center gap-1 text-[11px] font-semibold ${state.view === k ? 'text-[#F3E5AB]' : 'text-[#7D8394]'}">
+      <span class="w-12 h-7 rounded-full flex items-center justify-center transition" style="${state.view === k ? 'background:rgba(212,175,55,.16)' : ''}">${ico(i, 'w-5 h-5')}</span>${l}</button>`).join('') +
+    `<button data-action="notif" class="flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-[#7D8394]"><span class="w-12 h-7 rounded-full flex items-center justify-center relative">${ico('bell', 'w-5 h-5')}<span class="absolute top-0.5 right-3 w-2 h-2 rounded-full bg-[#D4AF37]"></span></span>Alertas</button>`;
+
+  const base = byNetwork(state.posts);
+  const count = s => s === 'all' ? base.length : base.filter(p => p.status === s).length;
+  const opts = [['all', 'Todos'], ['draft', 'Borrador'], ['scheduled', 'Programado'], ['published', 'Publicado']];
+  $('#statusChips').innerHTML = opts.map(([k, l]) =>
+    `<button class="chip" data-action="status" data-status="${k}" aria-pressed="${state.status === k}">${l}<span class="count">${count(k)}</span></button>`).join('');
+  $('#viewTitle').textContent = { grid: 'Publicaciones', calendar: 'Calendario editorial', analytics: 'Analíticas avanzadas' }[state.view];
+}
+
+/* =========================================================
+   Vista: Grid
+   ========================================================= */
+function postCard(p, i) {
+  const f = FORMATS[p.format];
+  const metric = (icon, val, label) => `<div class="flex flex-col items-center gap-1 py-2 rounded-xl bg-white/[.025]" title="${label}">
+      <span class="text-[#8B8676]">${ico(icon, 'w-3.5 h-3.5')}</span><span class="text-[13px] font-semibold">${val}</span><span class="sr-only">${label}</span></div>`;
+  const metrics = p.status === 'published' ? `
+    <div class="grid grid-cols-5 gap-1.5 mt-4">
+      ${metric('eye', fmtN(p.m.views), 'Vistas')}
+      ${metric('heart', fmtN(p.m.likes), 'Me gusta')}
+      ${metric('message-circle', fmtN(p.m.comments), 'Comentarios')}
+      ${metric('bookmark', fmtN(p.m.shares + p.m.saves), 'Compartidos y guardados')}
+      <div class="flex flex-col items-center gap-1 py-2 rounded-xl" style="background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3)" title="Tasa de engagement">
+        <span class="text-[#D4AF37]">${ico('zap', 'w-3.5 h-3.5')}</span><span class="text-[13px] font-bold gold-text">${er(p).toFixed(1)}%</span><span class="sr-only">Engagement</span></div>
+    </div>` : `
+    <div class="mt-4 rounded-xl px-3 py-3 flex items-center gap-3 text-xs text-[#9AA0AE] bg-white/[.025] border border-dashed border-[#2A3142]">
+      ${ico(p.status === 'scheduled' ? 'hourglass' : 'file-pen-line', 'w-4 h-4 text-[#D4AF37] shrink-0')}
+      <span>${p.status === 'scheduled' ? `<span class="text-emerald-300 font-semibold">${relLabel(p.date)}</span> · métricas disponibles al publicar` : 'Borrador · completá y marcá como listo para programar'}</span>
+    </div>`;
+
+  return `<article class="card card-hover overflow-hidden flex flex-col rise" style="animation-delay:${Math.min(i, 8) * 45}ms">
+    <div class="relative overflow-hidden group" style="aspect-ratio:${f.wide ? '16/9' : '4/5'}">
+      ${mediaEl(p, 'absolute inset-0 w-full h-full object-cover transition duration-700 group-hover:scale-[1.04]')}
+      <div class="absolute inset-0" style="background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,transparent 30%,transparent 60%,rgba(11,15,25,.9) 100%)"></div>
+      <div class="absolute top-3 left-3">${netBadge(p)}</div>
+      <div class="absolute top-3 right-3">${statusBadge(p.status)}</div>
+      ${f.video && p.duration ? `<span class="absolute bottom-3 right-3 text-[11px] font-semibold px-2 py-1 rounded-md bg-black/60 backdrop-blur">${ico('play', 'w-3 h-3 inline -mt-0.5 mr-1')}${fmtDur(p.duration)}</span>` : ''}
+      <button data-action="preview" data-id="${p.id}" class="absolute inset-0 opacity-0 focus-visible:opacity-100 group-hover:opacity-100 transition flex items-center justify-center" aria-label="Previsualizar ${esc(p.title)}">
+        <span class="btn-ghost glass text-sm">${ico('smartphone')}Vista previa</span>
+      </button>
+    </div>
+    <div class="p-4 md:p-5 flex flex-col flex-1">
+      <div class="flex items-center gap-2 text-[11px] font-semibold tracking-wide text-[#D4AF37]">${ico(p.status === 'published' ? 'calendar-check' : 'calendar-clock', 'w-3.5 h-3.5')}${fmtDate(p.date)}</div>
+      <h3 class="font-display text-[17px] font-semibold mt-2 clamp-1">${esc(p.title)}</h3>
+      <p class="text-[13px] leading-relaxed text-[#9AA0AE] mt-1.5 clamp-2">${esc(p.caption)}</p>
+      ${metrics}
+      <div class="mt-auto pt-4 flex items-center gap-1 border-t border-white/5 mt-4">
+        <button class="icon-btn" data-action="edit" data-id="${p.id}" aria-label="Editar">${ico('pencil')}</button>
+        <button class="icon-btn" data-action="duplicate" data-id="${p.id}" aria-label="Duplicar">${ico('copy')}</button>
+        <button class="icon-btn" data-action="preview" data-id="${p.id}" aria-label="Previsualizar en vivo">${ico('smartphone')}</button>
+        <button class="icon-btn danger" data-action="delete" data-id="${p.id}" aria-label="Eliminar">${ico('trash-2')}</button>
+        ${p.status === 'published'
+          ? `<button class="ml-auto btn-ghost text-[13px] !px-3" data-action="analytics" data-id="${p.id}" aria-label="Ver analíticas detalladas de ${esc(p.title)}">${ico('chart-column', 'w-4 h-4 text-[#D4AF37]')}Analíticas</button>`
+          : `<button class="ml-auto btn-ghost text-[13px] !px-3" data-action="edit" data-id="${p.id}">${ico('settings-2', 'w-4 h-4 text-[#D4AF37]')}Gestionar</button>`}
+      </div>
+    </div>
+  </article>`;
+}
+function emptyState(msg = 'No hay publicaciones con estos filtros.') {
+  return `<div class="card p-10 md:p-16 text-center">
+    <span class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center" style="background:rgba(212,175,55,.1);color:#D4AF37">${ico('inbox', 'w-6 h-6')}</span>
+    <p class="font-display text-lg mt-4">${msg}</p>
+    <p class="text-sm text-[#9AA0AE] mt-1">Probá otro filtro o creá una nueva publicación.</p>
+    <button class="btn-gold mt-6" data-action="create">${ico('plus')}Crear Publicación</button></div>`;
+}
+function renderGrid() {
+  const list = filtered();
+  $('#view').innerHTML = list.length
+    ? `<div class="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 items-start">${list.map(postCard).join('')}</div>`
+    : emptyState();
+}
+
+/* =========================================================
+   Vista: Calendario
+   ========================================================= */
+function postsOnDay(key, list) { return list.filter(p => p.date.slice(0, 10) === key).sort((a, b) => a.date.localeCompare(b.date)); }
+const calChip = p => `<button data-action="open" data-id="${p.id}" class="w-full text-left flex items-center gap-1.5 px-1.5 py-1 rounded-lg text-[11px] font-medium hover:bg-white/10 transition truncate"
+   style="background:rgba(255,255,255,.04);border-left:2px solid ${p.status === 'published' ? '#D4AF37' : p.status === 'scheduled' ? '#34D399' : '#6B7180'}">
+   ${netDot(netOf(p), 16)}<span class="text-[#9AA0AE]">${fmtTime(p.date)}</span><span class="truncate">${esc(p.title)}</span></button>`;
+
+function renderCalendar() {
+  const list = filtered();
+  const c = state.calCursor;
+  let header, body;
+  if (state.calMode === 'month') {
+    const y = c.getFullYear(), mo = c.getMonth();
+    const offset = (new Date(y, mo, 1).getDay() + 6) % 7;
+    const days = new Date(y, mo + 1, 0).getDate();
+    const total = Math.ceil((offset + days) / 7) * 7;
+    header = `${MES_L[mo]} ${y}`;
+    let cells = '';
+    for (let i = 0; i < total; i++) {
+      const d = new Date(y, mo, 1 - offset + i), k = dayKey(d), ps = postsOnDay(k, list);
+      const inMonth = d.getMonth() === mo, isToday = k === dayKey(TODAY), sel = k === state.selDay;
+      cells += `<div role="button" tabindex="0" data-action="selday" data-day="${k}" aria-label="${d.getDate()} de ${MES_L[d.getMonth()]}, ${ps.length} publicaciones"
+        class="cal-cell p-1.5 md:p-2 border-r border-b border-white/5 cursor-pointer transition ${inMonth ? '' : 'opacity-35'} ${sel ? 'bg-[rgba(212,175,55,.07)]' : 'hover:bg-white/[.03]'}">
+        <div class="flex items-center justify-between">
+          <span class="text-xs md:text-sm font-semibold w-7 h-7 flex items-center justify-center rounded-full ${isToday ? 'text-[#1A1405]' : sel ? 'text-[#F3E5AB]' : 'text-[#C9C6BD]'}" style="${isToday ? 'background:var(--gold-grad)' : ''}">${d.getDate()}</span>
+          ${ps.length ? `<span class="hidden md:inline text-[10px] text-[#7D8394]">${ps.length}</span>` : ''}
+        </div>
+        <div class="hidden md:flex flex-col gap-1 mt-1">${ps.slice(0, 3).map(calChip).join('')}${ps.length > 3 ? `<span class="text-[10px] text-[#D4AF37] px-1">+${ps.length - 3} más</span>` : ''}</div>
+        <div class="md:hidden flex gap-1 mt-1.5 flex-wrap justify-center">${ps.map(p => `<span class="w-1.5 h-1.5 rounded-full" style="background:${NET[netOf(p)].color}"></span>`).join('')}</div>
+      </div>`;
+    }
+    body = `<div class="grid grid-cols-7 border-l border-t border-white/5 rounded-2xl overflow-hidden">
+      ${DIAS.map(d => `<div class="text-center text-[10px] md:text-xs font-bold tracking-widest uppercase text-[#7D8394] py-2 border-r border-b border-white/5 bg-white/[.02]">${d}</div>`).join('')}${cells}</div>`;
+  } else {
+    const start = new Date(c); start.setDate(c.getDate() - ((c.getDay() + 6) % 7));
+    const end = new Date(start); end.setDate(start.getDate() + 6);
+    header = `${start.getDate()} ${MES[start.getMonth()]} – ${end.getDate()} ${MES[end.getMonth()]} ${end.getFullYear()}`;
+    let cols = '';
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(start); d.setDate(start.getDate() + i);
+      const k = dayKey(d), ps = postsOnDay(k, list), isToday = k === dayKey(TODAY);
+      cols += `<div class="rounded-2xl p-3 bg-white/[.02] border ${isToday ? 'border-[rgba(212,175,55,.5)]' : 'border-white/5'} flex flex-col gap-2 min-h-[120px] md:min-h-[360px]">
+        <div class="flex items-baseline justify-between"><span class="text-xs font-bold uppercase tracking-widest ${isToday ? 'text-[#D4AF37]' : 'text-[#7D8394]'}">${DIAS[i]}</span><span class="font-display text-xl ${isToday ? 'gold-text' : ''}">${d.getDate()}</span></div>
+        ${ps.map(p => `<button data-action="open" data-id="${p.id}" class="text-left rounded-xl overflow-hidden bg-[#10141F] border border-white/5 hover:border-[rgba(212,175,55,.45)] transition flex md:block">
+            <div class="relative w-24 md:w-full shrink-0" style="aspect-ratio:16/10">${mediaEl(p, 'absolute inset-0 w-full h-full object-cover')}<span class="absolute top-1.5 left-1.5">${netDot(netOf(p), 18)}</span></div>
+            <div class="p-2.5 min-w-0"><div class="text-[11px] text-[#D4AF37] font-semibold">${fmtTime(p.date)} HS</div><div class="text-[13px] font-semibold clamp-2 mt-0.5">${esc(p.title)}</div><div class="mt-1.5">${statusBadge(p.status)}</div></div>
+          </button>`).join('')}
+        <button data-action="create" data-day="${k}" class="mt-auto min-h-[44px] rounded-xl border border-dashed border-[#2A3142] text-[#7D8394] hover:text-[#F3E5AB] hover:border-[rgba(212,175,55,.5)] transition text-xs font-semibold flex items-center justify-center gap-1.5" aria-label="Programar el ${d.getDate()} de ${MES_L[d.getMonth()]}">${ico('plus', 'w-3.5 h-3.5')}Agregar</button>
+      </div>`;
+    }
+    body = `<div class="grid grid-cols-1 md:grid-cols-7 gap-3">${cols}</div>`;
+  }
+
+  const sd = new Date(state.selDay + 'T12:00'), selPosts = postsOnDay(state.selDay, list);
+  const dayPanel = state.calMode === 'month' ? `
+    <div class="card p-4 md:p-6 mt-5">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div><p class="text-xs uppercase tracking-[.2em] text-[#7D8394]">${DIAS_L[sd.getDay()]}</p><h3 class="font-display text-lg font-semibold">${sd.getDate()} de ${MES_L[sd.getMonth()]}</h3></div>
+        <button class="btn-ghost text-sm" data-action="create" data-day="${state.selDay}">${ico('plus', 'w-4 h-4 text-[#D4AF37]')}Programar este día</button>
+      </div>
+      <div class="mt-4 flex flex-col gap-2">${selPosts.length ? selPosts.map(p => `
+        <button data-action="open" data-id="${p.id}" class="flex items-center gap-3 p-2 rounded-2xl bg-white/[.02] hover:bg-white/[.05] border border-white/5 hover:border-[rgba(212,175,55,.35)] transition text-left">
+          <span class="relative w-14 h-14 rounded-xl overflow-hidden shrink-0">${mediaEl(p, 'absolute inset-0 w-full h-full object-cover')}</span>
+          <span class="min-w-0 flex-1"><span class="flex items-center gap-2 text-xs text-[#D4AF37] font-semibold">${netDot(netOf(p), 16)}${fmtTime(p.date)} HS</span><span class="block font-semibold text-sm truncate mt-0.5">${esc(p.title)}</span></span>
+          <span class="shrink-0 hidden sm:block">${statusBadge(p.status)}</span>${ico('chevron-right', 'w-4 h-4 text-[#7D8394] shrink-0')}
+        </button>`).join('') : `<p class="text-sm text-[#7D8394] py-4 text-center">Sin publicaciones este día.</p>`}</div>
+    </div>` : '';
+
+  $('#view').innerHTML = `
+    <div class="card p-3 md:p-6">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div class="flex items-center gap-1">
+          <button class="icon-btn" data-action="calnav" data-dir="-1" aria-label="Anterior">${ico('chevron-left', 'w-5 h-5')}</button>
+          <h3 class="font-display text-lg md:text-xl font-semibold min-w-[150px] text-center">${header}</h3>
+          <button class="icon-btn" data-action="calnav" data-dir="1" aria-label="Siguiente">${ico('chevron-right', 'w-5 h-5')}</button>
+          <button class="btn-ghost text-sm !min-h-[40px] ml-1" data-action="caltoday">Hoy</button>
+        </div>
+        <div class="seg" role="group" aria-label="Modo de calendario">
+          <button data-action="calmode" data-mode="month" aria-pressed="${state.calMode === 'month'}">Mensual</button>
+          <button data-action="calmode" data-mode="week" aria-pressed="${state.calMode === 'week'}">Semanal</button>
+        </div>
+      </div>
+      ${body}
+      <div class="flex flex-wrap gap-4 mt-4 text-[11px] text-[#9AA0AE]">
+        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[#D4AF37]"></span>Publicado</span>
+        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-400"></span>Programado</span>
+        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[#6B7180]"></span>Borrador</span>
+      </div>
+    </div>${dayPanel}`;
+}
+
+/* =========================================================
+   Vista: Analíticas avanzadas
+   ========================================================= */
+function renderAnalytics() {
+  const list = filtered();
+  const pub = list.filter(p => p.status === 'published');
+  const nets = state.network === 'all' ? Object.keys(NET) : [state.network];
+  const summary = nets.map((n, i) => {
+    const ps = pub.filter(p => netOf(p) === n);
+    const views = ps.reduce((a, p) => a + p.m.views, 0);
+    const avg = ps.length ? ps.reduce((a, p) => a + er(p), 0) / ps.length : 0;
+    const best = ps.slice().sort((a, b) => er(b) - er(a))[0];
+    const vsBase = avg ? (avg / BASE[n].er * 100 - 100) : 0;
+    return `<article class="card card-hover p-5 rise" style="animation-delay:${i * 60}ms">
+      <div class="flex items-center gap-3">${netDot(n, 34)}<div><h3 class="font-semibold">${NET[n].label}</h3><p class="text-xs text-[#7D8394]">${ps.length} publicadas</p></div>
+        ${avg ? `<span class="ml-auto text-xs font-bold ${vsBase >= 0 ? 'text-[#F3E5AB]' : 'text-red-300'}">${vsBase >= 0 ? '+' : ''}${vsBase.toFixed(0)}% vs prom.</span>` : ''}</div>
+      <div class="grid grid-cols-2 gap-3 mt-4">
+        <div class="rounded-xl bg-white/[.03] p-3"><p class="text-[11px] text-[#7D8394] uppercase tracking-wider">Vistas</p><p class="font-display text-xl font-semibold mt-1">${fmtN(views)}</p></div>
+        <div class="rounded-xl bg-white/[.03] p-3"><p class="text-[11px] text-[#7D8394] uppercase tracking-wider">Engagement</p><p class="font-display text-xl font-semibold mt-1 gold-text">${avg.toFixed(1)}%</p></div>
+      </div>
+      <p class="text-xs text-[#9AA0AE] mt-3 truncate">${best ? `${ico('crown', 'w-3.5 h-3.5 inline -mt-0.5 text-[#D4AF37]')} Mejor: <span class="text-[#ECE9E1]">${esc(best.title)}</span>` : 'Sin datos todavía'}</p>
+    </article>`;
+  }).join('');
+
+  const { key, dir } = state.sort;
+  const val = (p, k) => k === 'date' ? new Date(p.date).getTime() : k === 'er' ? er(p) : k === 'title' ? p.title.toLowerCase() : (p.m ? p.m[k] : -1);
+  const rows = list.slice().sort((a, b) => { const x = val(a, key), y = val(b, key); return (x > y ? 1 : x < y ? -1 : 0) * dir; });
+  const cols = [['title', 'Publicación'], ['date', 'Fecha'], ['views', 'Vistas'], ['likes', 'Me gusta'], ['comments', 'Coment.'], ['shares', 'Compart.'], ['saves', 'Guardados'], ['ctr', 'CTR'], ['er', 'Engagement']];
+  const th = ([k, l]) => `<th scope="col" class="px-3 py-3 font-semibold ${k === 'title' ? 'text-left' : 'text-right'}" aria-sort="${key === k ? (dir > 0 ? 'ascending' : 'descending') : 'none'}">
+      <button data-action="sort" data-key="${k}" class="inline-flex items-center gap-1 min-h-[36px] hover:text-[#F3E5AB] ${key === k ? 'text-[#F3E5AB]' : ''}">${l}${key === k ? ico(dir > 0 ? 'arrow-up' : 'arrow-down', 'w-3 h-3') : ''}</button></th>`;
+  const num = (p, k, f = fmtN) => p.m ? f(p.m[k]) : '<span class="text-[#4B5263]">—</span>';
+  const table = `<div class="card mt-6 overflow-hidden hidden md:block">
+    <div class="overflow-x-auto"><table class="w-full text-sm">
+      <thead class="text-[11px] uppercase tracking-wider text-[#7D8394] bg-white/[.02]"><tr>${cols.map(th).join('')}<th class="px-3"><span class="sr-only">Acciones</span></th></tr></thead>
+      <tbody>${rows.map(p => `<tr class="border-t border-white/5 hover:bg-white/[.025] transition">
+        <td class="px-3 py-3"><div class="flex items-center gap-3 min-w-[240px]"><span class="relative w-12 h-12 rounded-xl overflow-hidden shrink-0">${mediaEl(p, 'absolute inset-0 w-full h-full object-cover')}<span class="absolute bottom-0.5 right-0.5">${netDot(netOf(p), 16)}</span></span>
+          <div class="min-w-0"><div class="font-semibold truncate max-w-[260px]">${esc(p.title)}</div><div class="mt-1">${statusBadge(p.status)}</div></div></div></td>
+        <td class="px-3 py-3 text-right text-[#9AA0AE] whitespace-nowrap">${fmtDate(p.date).replace(' HS', '')}</td>
+        <td class="px-3 py-3 text-right font-semibold">${num(p, 'views')}</td>
+        <td class="px-3 py-3 text-right">${num(p, 'likes')}</td>
+        <td class="px-3 py-3 text-right">${num(p, 'comments')}</td>
+        <td class="px-3 py-3 text-right">${num(p, 'shares')}</td>
+        <td class="px-3 py-3 text-right">${num(p, 'saves')}</td>
+        <td class="px-3 py-3 text-right">${num(p, 'ctr', v => v.toFixed(1) + '%')}</td>
+        <td class="px-3 py-3 text-right">${p.m ? `<span class="font-bold gold-text">${er(p).toFixed(1)}%</span>` : '<span class="text-[#4B5263]">—</span>'}</td>
+        <td class="px-3 py-3 text-right">${p.m ? `<button class="icon-btn" data-action="analytics" data-id="${p.id}" aria-label="Ver analíticas de ${esc(p.title)}">${ico('chart-column', 'w-4 h-4 text-[#D4AF37]')}</button>` : `<button class="icon-btn" data-action="edit" data-id="${p.id}" aria-label="Editar ${esc(p.title)}">${ico('pencil')}</button>`}</td>
+      </tr>`).join('')}</tbody></table></div></div>`;
+
+  const sortMobile = `<label class="md:hidden mt-6 flex items-center gap-3"><span class="text-xs uppercase tracking-wider text-[#7D8394] shrink-0">Ordenar por</span>
+    <select class="input !min-h-[44px]" data-change="sortm">${cols.map(([k, l]) => `<option value="${k}" ${key === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>`;
+  const mobileCards = `<div class="md:hidden mt-4 flex flex-col gap-3">${rows.map(p => `
+    <article class="card p-4">
+      <div class="flex items-center gap-3"><span class="relative w-14 h-14 rounded-xl overflow-hidden shrink-0">${mediaEl(p, 'absolute inset-0 w-full h-full object-cover')}</span>
+        <div class="min-w-0 flex-1"><div class="flex items-center gap-2 text-[11px] text-[#D4AF37] font-semibold">${netDot(netOf(p), 16)}${fmtDate(p.date)}</div><div class="font-semibold truncate mt-0.5">${esc(p.title)}</div></div></div>
+      ${p.m ? `<div class="grid grid-cols-3 gap-2 mt-3 text-center">
+          ${[['Vistas', fmtN(p.m.views)], ['Me gusta', fmtN(p.m.likes)], ['Coment.', fmtN(p.m.comments)], ['Compart.', fmtN(p.m.shares)], ['Guardados', fmtN(p.m.saves)], ['CTR', p.m.ctr.toFixed(1) + '%']]
+            .map(([l, v]) => `<div class="rounded-xl bg-white/[.03] py-2"><div class="text-[10px] uppercase tracking-wider text-[#7D8394]">${l}</div><div class="font-semibold text-sm mt-0.5">${v}</div></div>`).join('')}
+        </div>
+        <div class="flex items-center justify-between mt-3"><span class="text-sm">Engagement <b class="gold-text text-base">${er(p).toFixed(1)}%</b></span>
+          <button class="btn-ghost text-sm" data-action="analytics" data-id="${p.id}">${ico('chart-column', 'w-4 h-4 text-[#D4AF37]')}Detalle</button></div>`
+        : `<div class="flex items-center justify-between mt-3">${statusBadge(p.status)}<button class="btn-ghost text-sm" data-action="edit" data-id="${p.id}">${ico('pencil', 'w-4 h-4')}Editar</button></div>`}
+    </article>`).join('')}</div>`;
+
+  $('#view').innerHTML = `<div class="grid gap-4 md:gap-5 ${nets.length > 1 ? 'md:grid-cols-3' : 'md:grid-cols-1 max-w-md'}">${summary}</div>${rows.length ? table + sortMobile + mobileCards : '<div class="mt-6">' + emptyState() + '</div>'}`;
+}
+
+/* =========================================================
+   Render principal
+   ========================================================= */
+function renderView() {
+  ({ grid: renderGrid, calendar: renderCalendar, analytics: renderAnalytics })[state.view]();
+}
+function renderAll() {
+  renderNetFilter(); renderKPIs(); renderToolbar(); renderView(); icons();
+}
+function icons() { if (window.lucide) lucide.createIcons({ attrs: { 'aria-hidden': 'true' } }); }
+
+/* =========================================================
+   Modales
+   ========================================================= */
+function openModal(html, { wide = false, label = 'Diálogo' } = {}) {
+  state.lastFocus = document.activeElement;
+  $('#modalRoot').innerHTML = `<div class="overlay" data-overlay>
+    <div class="sheet ${wide ? 'md:max-w-6xl' : 'md:max-w-3xl'}" role="dialog" aria-modal="true" aria-label="${esc(label)}">${html}</div></div>`;
+  document.body.style.overflow = 'hidden';
+  icons();
+  const first = $('#modalRoot [data-autofocus]') || $('#modalRoot button');
+  first && first.focus({ preventScroll: true });
+}
+function closeModal() {
+  if (!$('#modalRoot').innerHTML) return;
+  $('#modalRoot').innerHTML = '';
+  document.body.style.overflow = '';
+  if (state.form && state.form.media && state.form.media.url && !state.posts.some(p => p.media && p.media.url === state.form.media.url)) URL.revokeObjectURL(state.form.media.url);
+  state.form = null;
+  state.lastFocus && state.lastFocus.focus && state.lastFocus.focus({ preventScroll: true });
+}
+const modalHead = (title, sub = '', extra = '') => `<div class="sheet-head border-b border-white/5"><div class="grabber md:hidden"></div>
+  <div class="flex items-center gap-3 px-5 md:px-7 py-4">${extra}<div class="min-w-0 flex-1"><h2 class="font-display text-lg md:text-xl font-semibold truncate">${title}</h2>${sub ? `<p class="text-xs text-[#9AA0AE] mt-0.5 truncate">${sub}</p>` : ''}</div>
+  <button class="icon-btn" data-action="close" aria-label="Cerrar">${ico('x', 'w-5 h-5')}</button></div></div>`;
+
+/* ---------- Charts ---------- */
+function ring(pct) {
+  const r = 46, C = 2 * Math.PI * r, v = Math.min(pct, 200) / 200;
+  return `<svg viewBox="0 0 120 120" class="w-28 h-28 md:w-32 md:h-32 shrink-0" role="img" aria-label="${Math.round(pct)}% del promedio">
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="#262D3D" stroke-width="10"/>
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="url(#gGoldH)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(C * v).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 60 60)"/>
+    <line x1="60" y1="4" x2="60" y2="20" stroke="#4B5263" stroke-width="2" transform="rotate(180 60 60)"/>
+    <text x="60" y="58" text-anchor="middle" fill="#F3E5AB" font-family="Outfit" font-size="24" font-weight="600">${Math.round(pct)}%</text>
+    <text x="60" y="76" text-anchor="middle" fill="#7D8394" font-size="9" letter-spacing="1">DEL PROMEDIO</text></svg>`;
+}
+function hourChart(n, iso) {
+  const vals = HOURS[n], max = Math.max(...vals), h = new Date(iso).getHours();
+  const idx = SLOTS.reduce((best, s, i) => { const dist = x => Math.min(Math.abs(x - h), 24 - Math.abs(x - h)); return dist(s) < dist(SLOTS[best]) ? i : best; }, 0);
+  const bestIdx = vals.indexOf(max);
+  const bars = vals.map((v, i) => {
+    const bh = v / max * 104, x = 14 + i * 47, y = 128 - bh;
+    return `<rect x="${x}" y="${y}" width="30" height="${bh}" rx="7" fill="${i === idx ? 'url(#gGold)' : '#2A3142'}"/>
+      <text x="${x + 15}" y="${y - 6}" text-anchor="middle" font-size="10" fill="${i === idx ? '#F3E5AB' : '#7D8394'}" font-weight="600">${v.toFixed(1)}%</text>
+      <text x="${x + 15}" y="146" text-anchor="middle" font-size="10" fill="${i === idx ? '#D4AF37' : '#7D8394'}">${pad(SLOTS[i])}h</text>`;
+  }).join('');
+  return { svg: `<svg viewBox="0 0 350 152" class="w-full" role="img" aria-label="Engagement promedio por franja horaria">${bars}</svg>`, idx, bestIdx };
+}
+function retentionChart(ret, dur) {
+  const end = Math.max(8, 100 - (100 - ret) / 0.625);
+  const pts = Array.from({ length: 25 }, (_, i) => { const t = i / 24; const v = Math.max(0, Math.min(100, 100 - (100 - end) * Math.pow(t, .6) + Math.sin(t * 14) * 1.6 * t)); return [24 + t * 316, 12 + (100 - v) / 100 * 116]; });
+  const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const avgY = 12 + (100 - ret) / 100 * 116;
+  return `<svg viewBox="0 0 350 150" class="w-full" role="img" aria-label="Curva de retención, promedio ${ret}%">
+    ${[0, 50, 100].map(v => `<line x1="24" x2="340" y1="${12 + (100 - v) / 100 * 116}" y2="${12 + (100 - v) / 100 * 116}" stroke="#1F2533"/><text x="18" y="${15 + (100 - v) / 100 * 116}" text-anchor="end" font-size="9" fill="#5D6475">${v}%</text>`).join('')}
+    <path d="${d} L340 128 L24 128Z" fill="url(#gArea)"/><path d="${d}" fill="none" stroke="url(#gGoldH)" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="24" x2="340" y1="${avgY}" y2="${avgY}" stroke="#F3E5AB" stroke-dasharray="4 4" stroke-opacity=".6"/>
+    <text x="336" y="${avgY - 5}" text-anchor="end" font-size="9.5" fill="#F3E5AB">Prom. ${ret}%</text>
+    <text x="24" y="144" font-size="9.5" fill="#7D8394">0:00</text><text x="340" y="144" text-anchor="end" font-size="9.5" fill="#7D8394">${fmtDur(dur)}</text></svg>`;
+}
+function compareRows(rows) {
+  return rows.map(r => {
+    const max = Math.max(r.a, r.b) || 1;
+    return `<div><div class="flex justify-between text-xs mb-1.5"><span class="text-[#9AA0AE]">${r.label}</span><span><b class="text-[#F3E5AB]">${r.f(r.a)}</b> <span class="text-[#5D6475]">/ ${r.f(r.b)}</span></span></div>
+      <div class="h-2 rounded-full bg-[#1F2533] overflow-hidden"><div class="h-full rounded-full" style="width:${r.a / max * 100}%;background:var(--gold-grad)"></div></div>
+      <div class="h-1 rounded-full bg-[#1F2533] overflow-hidden mt-1"><div class="h-full rounded-full bg-[#4B5263]" style="width:${r.b / max * 100}%"></div></div></div>`;
+  }).join('');
+}
+
+/* ---------- Modal de analíticas ---------- */
+function openAnalytics(id) {
+  const p = state.posts.find(x => x.id === id); if (!p || !p.m) return;
+  const n = netOf(p), b = BASE[n], e = er(p), ratio = e / b.er * 100, diff = ratio - 100, f = FORMATS[p.format];
+  const vs = (a, base) => { const d = (a / base - 1) * 100; return `<span class="text-[11px] font-bold ${d >= 0 ? 'text-[#F3E5AB]' : 'text-red-300'}">${d >= 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(0)}%</span>`; };
+  const retSec = p.m.retPct != null ? Math.round(p.duration * p.m.retPct / 100) : null;
+  const tile = (icon, label, value, extra = '') => `<div class="rounded-2xl p-3.5 md:p-4 bg-white/[.03] border border-white/5">
+      <div class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-[#7D8394]">${ico(icon, 'w-3.5 h-3.5 text-[#D4AF37]')}${label}</div>
+      <div class="font-display text-xl md:text-2xl font-semibold mt-2">${value}</div><div class="mt-1 min-h-[16px]">${extra}</div></div>`;
+  const hc = hourChart(n, p.date);
+
+  const sources = [['Feed / Para ti', 52], ['Explorar', 24], ['Perfil', 14], ['Hashtags', 10]];
+  const secondary = f.video ? `
+      <h3 class="font-semibold flex items-center gap-2">${ico('activity', 'w-4 h-4 text-[#D4AF37]')}Retención de audiencia</h3>
+      <p class="text-xs text-[#7D8394] mt-1">Promedio ${retSec}s de ${fmtDur(p.duration)} · ${p.m.retPct}% vs ${b.ret}% del canal</p>
+      <div class="mt-4">${retentionChart(p.m.retPct, p.duration)}</div>` : `
+      <h3 class="font-semibold flex items-center gap-2">${ico('compass', 'w-4 h-4 text-[#D4AF37]')}Origen del alcance</h3>
+      <p class="text-xs text-[#7D8394] mt-1">Publicación estática · sin métrica de retención</p>
+      <div class="mt-4 flex flex-col gap-3">${sources.map(([l, v]) => `<div><div class="flex justify-between text-xs mb-1.5"><span class="text-[#9AA0AE]">${l}</span><b>${v}%</b></div><div class="h-2 rounded-full bg-[#1F2533]"><div class="h-full rounded-full" style="width:${v}%;background:var(--gold-grad)"></div></div></div>`).join('')}</div>`;
+
+  openModal(`
+    ${modalHead(esc(p.title), `${NET[n].label} ${FORMATS[p.format].label} · ${fmtDate(p.date)}`, `<span class="relative w-12 h-12 rounded-xl overflow-hidden shrink-0">${mediaEl(p, 'absolute inset-0 w-full h-full object-cover')}<span class="absolute bottom-0.5 right-0.5">${netDot(n, 16)}</span></span>`)}
+    <div class="p-5 md:p-7 flex flex-col gap-5">
+      <section class="rounded-3xl p-5 md:p-6 flex flex-col sm:flex-row items-center gap-5" style="background:linear-gradient(135deg,rgba(212,175,55,.12),rgba(212,175,55,.02));border:1px solid rgba(212,175,55,.3)">
+        ${ring(ratio)}
+        <div class="text-center sm:text-left">
+          <p class="text-xs uppercase tracking-[.2em] text-[#D4AF37] font-bold">Rendimiento vs canal</p>
+          <p class="font-display text-2xl md:text-3xl font-semibold mt-1">${diff >= 0 ? `<span class="gold-text">${diff.toFixed(0)}% superior</span> al promedio` : `<span class="text-red-300">${Math.abs(diff).toFixed(0)}% inferior</span> al promedio`}</p>
+          <p class="text-sm text-[#9AA0AE] mt-2">Engagement de <b class="text-[#ECE9E1]">${e.toFixed(1)}%</b> frente a ${b.er}% histórico en ${NET[n].label}. ${diff >= 20 ? 'Candidato ideal para promocionar o reciclar en otro formato.' : diff >= 0 ? 'Sólido, en línea con tus mejores contenidos.' : 'Probá otro hook en los primeros 3 segundos.'}</p>
+        </div>
+      </section>
+
+      <section class="grid grid-cols-2 md:grid-cols-4 gap-3" aria-label="Métricas detalladas">
+        ${tile('eye', 'Vistas', fmtN(p.m.views), vs(p.m.views, b.views))}
+        ${tile('heart', 'Me gusta', fmtN(p.m.likes), `<span class="text-[11px] text-[#7D8394]">${(p.m.likes / p.m.views * 100).toFixed(1)}% de vistas</span>`)}
+        ${tile('message-circle', 'Comentarios', fmtN(p.m.comments), `<span class="text-[11px] text-[#7D8394]">${(p.m.comments / p.m.views * 1000).toFixed(1)} c/1K vistas</span>`)}
+        ${tile('share-2', 'Compartidos', fmtN(p.m.shares), vs(p.m.shares, b.shares))}
+        ${tile('mouse-pointer-click', 'CTR', p.m.ctr.toFixed(1) + '%', vs(p.m.ctr, b.ctr))}
+        ${tile('timer', 'Retención prom.', retSec != null ? `${retSec}s <span class="text-base text-[#9AA0AE]">· ${p.m.retPct}%</span>` : '<span class="text-[#5D6475]">N/A</span>', retSec != null ? vs(p.m.retPct, b.ret) : '<span class="text-[11px] text-[#7D8394]">Imagen</span>')}
+        ${tile('bookmark', 'Guardados', fmtN(p.m.saves), vs(p.m.saves, b.saves))}
+        ${tile('user-plus', 'Nuevos seguidores', '+' + fmtN(p.m.followers), vs(p.m.followers, b.followers))}
+      </section>
+
+      <section class="grid md:grid-cols-2 gap-4">
+        <div class="card p-5">
+          <h3 class="font-semibold flex items-center gap-2">${ico('clock', 'w-4 h-4 text-[#D4AF37]')}Rendimiento por hora de publicación</h3>
+          <p class="text-xs text-[#7D8394] mt-1">Engagement promedio en ${NET[n].label}. Dorado = franja de esta publicación (${fmtTime(p.date)} HS).</p>
+          <div class="mt-4">${hc.svg}</div>
+          <p class="text-xs mt-2 ${hc.idx === hc.bestIdx ? 'text-[#F3E5AB]' : 'text-[#9AA0AE]'}">${ico(hc.idx === hc.bestIdx ? 'badge-check' : 'lightbulb', 'w-3.5 h-3.5 inline -mt-0.5 text-[#D4AF37]')} ${hc.idx === hc.bestIdx ? 'Publicaste en la mejor franja del canal.' : `Mejor franja del canal: <b class="text-[#F3E5AB]">${pad(SLOTS[hc.bestIdx])}:00 HS</b> (+${(HOURS[n][hc.bestIdx] - HOURS[n][hc.idx]).toFixed(1)} pp).`}</p>
+        </div>
+        <div class="card p-5">${secondary}</div>
+      </section>
+
+      <section class="card p-5">
+        <div class="flex items-center justify-between gap-3 flex-wrap"><h3 class="font-semibold flex items-center gap-2">${ico('scale', 'w-4 h-4 text-[#D4AF37]')}Esta publicación vs promedio del canal</h3>
+          <div class="flex gap-4 text-[11px] text-[#9AA0AE]"><span class="flex items-center gap-1.5"><span class="w-3 h-2 rounded-full" style="background:var(--gold-grad)"></span>Publicación</span><span class="flex items-center gap-1.5"><span class="w-3 h-1 rounded-full bg-[#4B5263]"></span>Promedio</span></div></div>
+        <div class="grid md:grid-cols-2 gap-x-8 gap-y-4 mt-4">${compareRows([
+          { label: 'Vistas', a: p.m.views, b: b.views, f: fmtN },
+          { label: 'Engagement', a: e, b: b.er, f: v => v.toFixed(1) + '%' },
+          { label: 'Guardados', a: p.m.saves, b: b.saves, f: fmtN },
+          { label: 'Nuevos seguidores', a: p.m.followers, b: b.followers, f: fmtN },
+        ])}</div>
+      </section>
+
+      <div class="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end pb-2">
+        <button class="btn-ghost" data-action="close">Cerrar</button>
+        <button class="btn-ghost" data-action="preview" data-id="${p.id}">${ico('smartphone', 'w-4 h-4 text-[#D4AF37]')}Ver publicación</button>
+        <button class="btn-gold" data-action="duplicate" data-id="${p.id}">${ico('copy', 'w-4 h-4')}Reutilizar contenido</button>
+      </div>
+    </div>`, { label: 'Analíticas de ' + p.title });
+}
+
+/* ---------- Previsualización (mockups por red) ---------- */
+function previewHTML(p) {
+  const f = FORMATS[p.format], n = f.net;
+  const tags = (p.hashtags || []).map(t => `<span style="color:#8AB4F8">#${esc(t)}</span>`).join(' ');
+  const title = esc(p.title || 'Título de tu publicación');
+  const caption = esc(p.caption || 'Tu caption aparecerá aquí…');
+  const status = `<div class="flex justify-between items-center px-6 pt-3 text-[11px] font-semibold relative z-10"><span>9:41</span><span class="flex gap-1 items-center">${ico('signal', 'w-3 h-3')}${ico('wifi', 'w-3 h-3')}${ico('battery-full', 'w-3.5 h-3.5')}</span></div>`;
+  const media = cls => mediaEl(p, cls);
+  const avatar = `<span class="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style="background:var(--gold-grad);color:#1A1405">AM</span>`;
+
+  if (p.format === 'ig_post') return `<div class="phone-screen"><div class="phone-scroll">${status}
+    <div class="flex items-center justify-between px-3 py-2.5"><span class="font-semibold text-base" style="font-family:cursive">Instagram</span><span class="flex gap-3">${ico('heart', 'w-5 h-5')}${ico('send', 'w-5 h-5')}</span></div>
+    <div class="flex items-center gap-2 px-3 py-2"><span class="p-[2px] rounded-full" style="background:${NET.instagram.grad}">${avatar}</span><span class="font-semibold text-[12px]">aura.media</span>${ico('badge-check', 'w-3.5 h-3.5 text-sky-400')}<span class="ml-auto">${ico('ellipsis', 'w-4 h-4')}</span></div>
+    <div class="relative w-full" style="aspect-ratio:4/5">${media('absolute inset-0 w-full h-full object-cover')}</div>
+    <div class="flex items-center gap-3.5 px-3 py-2.5">${ico('heart', 'w-5 h-5')}${ico('message-circle', 'w-5 h-5')}${ico('send', 'w-5 h-5')}<span class="ml-auto">${ico('bookmark', 'w-5 h-5')}</span></div>
+    <div class="px-3 text-[12px] font-semibold">Les gusta a 0 personas</div>
+    <div class="px-3 pt-1 pb-6 text-[12px] leading-snug"><b>aura.media</b> <b>${title}</b> · ${caption} ${tags}</div></div></div>`;
+
+  if (p.format === 'yt_long') return `<div class="phone-screen" style="background:#0F0F0F"><div class="phone-scroll">${status}
+    <div class="flex items-center gap-1.5 px-3 py-2.5"><span class="w-6 h-4 text-[#FF0000]">${SVG.youtube}</span><b class="text-[14px] tracking-tight">YouTube</b><span class="ml-auto flex gap-3">${ico('cast', 'w-4 h-4')}${ico('search', 'w-4 h-4')}</span></div>
+    <div class="relative w-full" style="aspect-ratio:16/9">${media('absolute inset-0 w-full h-full object-cover')}<div class="absolute bottom-0 inset-x-0 h-[3px] bg-white/25"><div class="h-full w-1/3 bg-[#FF0000]"></div></div><span class="absolute bottom-2 right-2 text-[10px] bg-black/80 px-1 rounded">${fmtDur(p.duration || 600)}</span></div>
+    <div class="px-3 pt-3"><div class="font-semibold text-[14px] leading-snug">${title}</div><div class="text-[10.5px] text-white/60 mt-1">0 vistas · Estreno programado</div></div>
+    <div class="flex items-center gap-2 px-3 py-3">${avatar}<div class="leading-tight"><div class="font-semibold text-[12px]">AURA Media</div><div class="text-[10px] text-white/60">482 K suscriptores</div></div><span class="ml-auto bg-white text-black text-[11px] font-semibold rounded-full px-3 py-1.5">Suscribirse</span></div>
+    <div class="flex gap-2 px-3 overflow-hidden">${[['thumbs-up', '0'], ['share-2', 'Compartir'], ['download', 'Descargar']].map(([i, l]) => `<span class="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[11px] whitespace-nowrap">${ico(i, 'w-3.5 h-3.5')}${l}</span>`).join('')}</div>
+    <div class="mx-3 my-3 rounded-xl bg-white/10 p-2.5 text-[11px] leading-snug"><b>Descripción</b><div class="mt-1 text-white/85 clamp-3">${caption}</div><div class="mt-1">${tags}</div></div>
+    ${[1, 2].map(() => `<div class="flex gap-2 px-3 pb-3"><div class="w-28 rounded-lg bg-white/10 shrink-0" style="aspect-ratio:16/9"></div><div class="flex-1 space-y-1.5 pt-1"><div class="h-2.5 rounded bg-white/15"></div><div class="h-2.5 w-2/3 rounded bg-white/10"></div></div></div>`).join('')}
+    </div></div>`;
+
+  // Formatos verticales: Reels / TikTok / Shorts
+  const top = n === 'tiktok'
+    ? `<div class="absolute top-11 inset-x-0 flex justify-center gap-4 text-[13px] font-semibold z-10"><span class="text-white/60">Siguiendo</span><span class="border-b-2 border-white pb-0.5">Para ti</span></div>`
+    : `<div class="absolute top-11 inset-x-0 flex items-center px-4 text-[15px] font-bold z-10">${n === 'youtube' ? `<span class="w-5 h-5 text-[#FF0000] mr-1.5">${SVG.youtube}</span>Shorts` : 'Reels'}<span class="ml-auto">${ico('camera', 'w-5 h-5')}</span></div>`;
+  const side = n === 'tiktok' ? [['heart', '0'], ['message-circle-more', '0'], ['bookmark', '0'], ['share', 'Compartir']]
+    : n === 'youtube' ? [['thumbs-up', 'Me gusta'], ['thumbs-down', 'No me gusta'], ['message-square', '0'], ['share', 'Compartir']]
+    : [['heart', '0'], ['message-circle', '0'], ['send', '0'], ['ellipsis', '']];
+  return `<div class="phone-screen">${media('absolute inset-0 w-full h-full object-cover')}
+    <div class="absolute inset-0" style="background:linear-gradient(180deg,rgba(0,0,0,.45),transparent 22%,transparent 55%,rgba(0,0,0,.85))"></div>
+    ${status}${top}
+    <div class="absolute right-2.5 bottom-24 flex flex-col items-center gap-4 z-10">
+      ${n === 'tiktok' ? `<span class="relative mb-1">${avatar}<span class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-[#FE2C55] flex items-center justify-center">${ico('plus', 'w-3 h-3')}</span></span>` : ''}
+      ${side.map(([i, l]) => `<span class="flex flex-col items-center gap-0.5 text-[10px] font-semibold drop-shadow">${ico(i, 'w-6 h-6')}${l}</span>`).join('')}
+    </div>
+    <div class="absolute left-3 right-14 bottom-6 z-10 text-[11.5px] leading-snug drop-shadow">
+      <div class="flex items-center gap-2 mb-2">${n === 'tiktok' ? '' : avatar}<b>${n === 'tiktok' ? '@aura.media' : n === 'youtube' ? '@AuraMedia' : 'aura.media'}</b>
+        ${n === 'youtube' ? '<span class="bg-white text-black text-[10px] font-semibold rounded-full px-2.5 py-1">Suscribirse</span>' : n === 'instagram' ? '<span class="border border-white/70 text-[10px] font-semibold rounded-lg px-2 py-0.5">Seguir</span>' : ''}</div>
+      <div class="font-semibold clamp-1">${title}</div>
+      <div class="clamp-2 text-white/90 mt-0.5">${caption}</div>
+      <div class="clamp-1 mt-0.5">${tags}</div>
+      ${n !== 'youtube' ? `<div class="flex items-center gap-1.5 mt-2 text-[10.5px]">${ico('music-2', 'w-3 h-3')}<span class="truncate">Sonido original · AURA Media</span></div>` : ''}
+    </div>
+    <div class="absolute bottom-0 inset-x-0 h-[3px] bg-white/25 z-10"><div class="h-full w-1/4 ${n === 'tiktok' ? 'bg-white' : n === 'youtube' ? 'bg-[#FF0000]' : 'bg-white'}"></div></div>
+  </div>`;
+}
+const phone = p => `<div class="phone"><div class="phone-notch"></div>${previewHTML(p)}</div>`;
+
+function openPreview(id) {
+  const p = state.posts.find(x => x.id === id); if (!p) return;
+  openModal(`${modalHead('Previsualización en vivo', `${FORMATS[p.format].full} · ${fmtDate(p.date)}`)}
+    <div class="p-5 md:p-8 flex flex-col md:flex-row items-center gap-8">
+      ${phone(p)}
+      <div class="flex-1 min-w-0 w-full">
+        <div class="flex gap-2 flex-wrap">${netBadge(p)}${statusBadge(p.status)}</div>
+        <h3 class="font-display text-2xl font-semibold mt-3">${esc(p.title)}</h3>
+        <p class="text-sm text-[#9AA0AE] mt-2 leading-relaxed">${esc(p.caption)}</p>
+        <p class="text-sm mt-2" style="color:#8AB4F8">${p.hashtags.map(t => '#' + esc(t)).join(' ')}</p>
+        <div class="flex flex-wrap gap-3 mt-6">
+          <button class="btn-gold" data-action="edit" data-id="${p.id}">${ico('pencil', 'w-4 h-4')}Editar</button>
+          ${p.m ? `<button class="btn-ghost" data-action="analytics" data-id="${p.id}">${ico('chart-column', 'w-4 h-4 text-[#D4AF37]')}Ver analíticas</button>` : ''}
+        </div>
+      </div>
+    </div>`, { label: 'Previsualización de ' + p.title });
+}
+
+/* ---------- Modal de creación / edición ---------- */
+function openEditor(id, day) {
+  const p = id ? state.posts.find(x => x.id === id) : null;
+  let date, time = '18:30';
+  if (p) { date = p.date.slice(0, 10); time = p.date.slice(11, 16); }
+  else if (day) date = day;
+  else { const t = new Date(TODAY); t.setDate(t.getDate() + 1); date = dayKey(t); }
+  state.form = p
+    ? { id: p.id, format: p.format, title: p.title, caption: p.caption, hashtags: [...p.hashtags], date, time, status: p.status, media: p.media || null, img: p.img, duration: p.duration }
+    : { id: null, format: 'ig_reel', title: '', caption: '', hashtags: [], date, time, status: 'draft', media: null, img: null, duration: 30 };
+  const F = state.form, locked = F.status === 'published';
+
+  openModal(`${modalHead(p ? 'Editar publicación' : 'Nueva publicación', p ? esc(p.title) : 'Diseñá, programá y previsualizá tu contenido')}
+    <div class="lg:hidden px-5 pt-4"><div class="seg w-full" role="tablist">
+      <button class="flex-1 justify-center" role="tab" data-action="tab" data-tab="edit" aria-pressed="true">${ico('pencil-line')}Editar</button>
+      <button class="flex-1 justify-center" role="tab" data-action="tab" data-tab="preview" aria-pressed="false">${ico('smartphone')}Vista previa</button></div></div>
+    <form id="postForm" novalidate class="grid lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div data-pane="edit" class="p-5 md:p-7 flex flex-col gap-6 min-w-0">
+        <div>
+          <span class="label">Archivo multimedia</span>
+          <div id="dropzone" class="dropzone p-4 md:p-5"></div>
+          <input id="fileInput" type="file" accept="image/*,video/*" class="sr-only" aria-label="Seleccionar archivo">
+        </div>
+        <fieldset ${locked ? 'disabled' : ''}>
+          <legend class="label">Plataforma y formato</legend>
+          <div id="formatPicker" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+        </fieldset>
+        <div>
+          <label class="label" for="fTitle">Título</label>
+          <input id="fTitle" name="title" class="input" maxlength="100" placeholder="Ej: 3 claves para un feed de lujo" value="${esc(F.title)}" data-autofocus>
+          <p id="errTitle" class="text-xs text-red-300 mt-1.5 hidden" role="alert"></p>
+        </div>
+        <div>
+          <div class="flex justify-between items-end"><label class="label" for="fCaption">Copy / Caption</label><span id="capCount" class="text-[11px] text-[#7D8394] mb-2"></span></div>
+          <textarea id="fCaption" name="caption" rows="4" maxlength="2200" class="input resize-y leading-relaxed" placeholder="Contá la historia, sumá un CTA claro…">${esc(F.caption)}</textarea>
+        </div>
+        <div>
+          <label class="label" for="tagInput">Hashtags</label>
+          <div class="input !p-2 flex flex-wrap gap-1.5 items-center min-h-[50px]" id="tagBox">
+            <span id="tagList" class="contents"></span>
+            <input id="tagInput" class="flex-1 min-w-[140px] bg-transparent outline-none text-sm px-1.5 min-h-[34px]" placeholder="Escribí y presioná Enter" autocomplete="off">
+          </div>
+          <p class="text-[11px] uppercase tracking-wider text-[#7D8394] mt-3 mb-2 flex items-center gap-1.5">${ico('wand-sparkles', 'w-3.5 h-3.5 text-[#D4AF37]')}Recomendados</p>
+          <div id="tagSuggest" class="flex flex-wrap gap-1.5"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="label" for="fDate">Fecha</label><input id="fDate" name="date" type="date" class="input" value="${F.date}" ${locked ? 'disabled' : ''}></div>
+          <div><label class="label" for="fTime">Hora</label><input id="fTime" name="time" type="time" class="input" value="${F.time}" ${locked ? 'disabled' : ''}></div>
+          <p id="errDate" class="col-span-2 text-xs text-red-300 hidden" role="alert"></p>
+          <p id="bestTime" class="col-span-2 text-xs text-[#9AA0AE]"></p>
+        </div>
+        ${locked ? `<div class="rounded-2xl p-4 flex items-center gap-3 text-sm" style="background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.3)">${ico('circle-check', 'w-5 h-5 text-[#D4AF37] shrink-0')}Publicación ya publicada: podés actualizar título, copy y hashtags.</div>`
+        : `<div class="rounded-2xl p-4 flex items-center gap-4 bg-white/[.03] border border-white/5">
+            <div class="flex-1"><p class="font-semibold" id="statusLabel"></p><p class="text-xs text-[#9AA0AE] mt-0.5" id="statusHint"></p></div>
+            <button type="button" class="switch" role="switch" id="statusSwitch" data-action="toggleStatus" aria-checked="${F.status === 'scheduled'}" aria-label="Listo para publicar"></button>
+          </div>`}
+      </div>
+      <aside data-pane="preview" class="hidden lg:flex flex-col items-center gap-4 p-6 border-l border-white/5" style="background:radial-gradient(400px 300px at 50% 30%,rgba(212,175,55,.08),transparent)">
+        <p class="text-[11px] uppercase tracking-[.22em] text-[#D4AF37] font-bold flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Vista previa en vivo</p>
+        <div id="livePreview"></div>
+        <p id="previewLabel" class="text-xs text-[#7D8394]"></p>
+      </aside>
+    </form>
+    <div class="sticky bottom-0 glass border-t border-white/5 px-5 md:px-7 py-4 flex gap-3 justify-end" style="padding-bottom:max(1rem,env(safe-area-inset-bottom))">
+      <button class="btn-ghost" data-action="close">Cancelar</button>
+      <button class="btn-gold min-w-[170px]" id="saveBtn" data-action="save">${ico('save', 'w-4 h-4')}<span>Guardar</span></button>
+    </div>`, { wide: true, label: p ? 'Editar publicación' : 'Nueva publicación' });
+  refreshEditor();
+}
+
+function refreshEditor() {
+  const F = state.form; if (!F) return;
+  const f = FORMATS[F.format], n = f.net, locked = F.status === 'published';
+  // Dropzone
+  const hasMedia = F.media || F.img;
+  $('#dropzone').innerHTML = hasMedia ? `
+    <div class="flex items-center gap-4">
+      <span class="relative w-20 h-20 rounded-xl overflow-hidden shrink-0 border border-white/10">${mediaEl(F, 'absolute inset-0 w-full h-full object-cover')}</span>
+      <div class="min-w-0 flex-1"><p class="font-semibold text-sm truncate">${esc(F.media ? F.media.name : 'Imagen actual')}</p><p class="text-xs text-[#7D8394] mt-0.5">${F.media ? (F.media.size / 1048576).toFixed(1) + ' MB · ' + esc(F.media.type) : 'Arrastrá un archivo nuevo para reemplazarla'}</p>
+        <div class="flex gap-2 mt-2"><button type="button" class="btn-ghost !min-h-[38px] text-xs" data-action="pickfile">${ico('refresh-cw', 'w-3.5 h-3.5')}Cambiar</button>
+        <button type="button" class="btn-ghost !min-h-[38px] text-xs" data-action="removefile">${ico('x', 'w-3.5 h-3.5')}Quitar</button></div></div>
+    </div>` : `
+    <button type="button" data-action="pickfile" class="w-full flex flex-col items-center justify-center text-center gap-2 py-6">
+      <span class="w-12 h-12 rounded-2xl flex items-center justify-center" style="background:rgba(212,175,55,.1);color:#D4AF37">${ico('cloud-upload', 'w-6 h-6')}</span>
+      <span class="font-semibold">Arrastrá tu imagen o video aquí</span>
+      <span class="text-xs text-[#7D8394]">o <span class="text-[#F3E5AB] underline underline-offset-2">explorá tus archivos</span> · JPG, PNG, MP4, MOV · máx. 200 MB</span>
+    </button>`;
+  // Format picker
+  $('#formatPicker').innerHTML = Object.entries(FORMATS).map(([k, v]) => `
+    <button type="button" data-action="format" data-format="${k}" aria-pressed="${F.format === k}"
+      class="flex items-center gap-2.5 p-2.5 rounded-2xl border text-left transition min-h-[52px] ${F.format === k ? 'border-[rgba(212,175,55,.75)] bg-[rgba(212,175,55,.1)]' : 'border-[#262D3D] hover:border-[rgba(212,175,55,.4)]'} disabled:opacity-50">
+      ${netDot(v.net, 28)}<span class="leading-tight min-w-0"><span class="block text-[13px] font-semibold truncate">${NET[v.net].label}</span><span class="block text-[11px] ${F.format === k ? 'text-[#F3E5AB]' : 'text-[#7D8394]'}">${v.label}</span></span></button>`).join('');
+  // Tags
+  $('#tagList').innerHTML = F.hashtags.map((t, i) => `<span class="inline-flex items-center gap-1 pl-2.5 pr-1 py-1 rounded-full text-xs font-semibold" style="background:rgba(212,175,55,.12);color:#F3E5AB;border:1px solid rgba(212,175,55,.35)">#${esc(t)}<button type="button" data-action="rmtag" data-i="${i}" class="w-6 h-6 inline-flex items-center justify-center rounded-full hover:bg-white/10" aria-label="Quitar #${esc(t)}">${ico('x', 'w-3 h-3')}</button></span>`).join('');
+  $('#tagSuggest').innerHTML = SUGGEST[n].map(t => { const has = F.hashtags.includes(t); return `<button type="button" class="chip !min-h-[36px] !text-xs" data-action="addtag" data-tag="${t}" ${has ? 'disabled style="opacity:.4"' : ''}>${has ? ico('check', 'w-3 h-3') : ico('plus', 'w-3 h-3')}#${t}</button>`; }).join('');
+  $('#capCount').textContent = `${F.caption.length} / 2200`;
+  const hc = HOURS[n], bi = hc.indexOf(Math.max(...hc));
+  $('#bestTime').innerHTML = `${ico('sparkles', 'w-3.5 h-3.5 inline -mt-0.5 text-[#D4AF37]')} Mejor horario en ${NET[n].label}: <button type="button" class="text-[#F3E5AB] underline underline-offset-2 font-semibold" data-action="besttime" data-time="${pad(SLOTS[bi])}:00" ${locked ? 'disabled' : ''}>${pad(SLOTS[bi])}:00 HS</button> (${hc[bi]}% engagement)`;
+  if (!locked) {
+    const ready = F.status === 'scheduled';
+    $('#statusSwitch').setAttribute('aria-checked', ready);
+    $('#statusLabel').innerHTML = ready ? `<span class="text-emerald-300">Listo para publicar</span>` : 'Borrador';
+    $('#statusHint').textContent = ready ? 'Se publicará automáticamente en la fecha y hora elegidas.' : 'Guardalo y terminalo después. No se publicará.';
+    $('#saveBtn span').textContent = ready ? 'Programar publicación' : 'Guardar borrador';
+  } else $('#saveBtn span').textContent = 'Guardar cambios';
+  updatePreview();
+  icons();
+}
+function updatePreview() {
+  const F = state.form; if (!F) return;
+  $('#livePreview').innerHTML = phone({ ...F, date: `${F.date}T${F.time}` });
+  $('#previewLabel').textContent = `${FORMATS[F.format].full} · ${F.date ? fmtDate(`${F.date}T${F.time || '00:00'}`) : 'Sin fecha'}`;
+  icons();
+}
+function setTab(tab) {
+  const edit = $('[data-pane="edit"]'), prev = $('[data-pane="preview"]');
+  edit.classList.toggle('hidden', tab === 'preview'); edit.classList.add('lg:flex');
+  prev.classList.toggle('hidden', tab !== 'preview'); prev.classList.toggle('flex', tab === 'preview');
+  $$('[data-action="tab"]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tab === tab));
+}
+function addTag(raw) {
+  const F = state.form;
+  raw.split(/[\s,]+/).forEach(t => {
+    t = t.replace(/^#+/, '').replace(/[^\p{L}\p{N}_]/gu, '').slice(0, 40);
+    if (t && !F.hashtags.includes(t) && F.hashtags.length < 30) F.hashtags.push(t);
+  });
+}
+function handleFile(file) {
+  if (!file) return;
+  if (!/^(image|video)\//.test(file.type)) return toast('Formato no soportado. Usá una imagen o un video.', { icon: 'circle-alert', error: true });
+  if (file.size > 200 * 1048576) return toast('El archivo supera los 200 MB.', { icon: 'circle-alert', error: true });
+  const F = state.form;
+  if (F.media && F.media.url && !state.posts.some(p => p.media && p.media.url === F.media.url)) URL.revokeObjectURL(F.media.url);
+  F.media = { url: URL.createObjectURL(file), type: file.type, name: file.name, size: file.size };
+  if (file.type.startsWith('video')) {
+    const v = document.createElement('video'); v.preload = 'metadata'; v.src = F.media.url;
+    v.onloadedmetadata = () => { if (state.form === F && isFinite(v.duration)) F.duration = Math.round(v.duration); };
+  }
+  refreshEditor();
+}
+function saveForm() {
+  const F = state.form; if (!F) return;
+  const errT = $('#errTitle'), errD = $('#errDate');
+  let ok = true;
+  const title = F.title.trim();
+  errT.classList.add('hidden'); errD.classList.add('hidden'); $('#fTitle').removeAttribute('aria-invalid');
+  if (!title) { errT.textContent = 'El título es obligatorio.'; errT.classList.remove('hidden'); $('#fTitle').setAttribute('aria-invalid', 'true'); ok = false; }
+  const when = new Date(`${F.date}T${F.time}`);
+  if (!F.date || !F.time || isNaN(when)) { errD.textContent = 'Elegí una fecha y hora válidas.'; errD.classList.remove('hidden'); ok = false; }
+  else if (F.status === 'scheduled' && when <= new Date()) { errD.textContent = 'Para programar, la fecha debe ser futura.'; errD.classList.remove('hidden'); ok = false; }
+  if (!ok) { setTab('edit'); (title ? $('#fDate') : $('#fTitle')).focus(); return; }
+
+  const btn = $('#saveBtn'); btn.disabled = true;
+  btn.innerHTML = `${ico('loader-circle', 'w-4 h-4 spin')}<span>Guardando…</span>`; icons();
+  setTimeout(() => {
+    const data = { format: F.format, title, caption: F.caption.trim(), hashtags: F.hashtags, date: `${F.date}T${F.time}`, status: F.status, media: F.media, img: F.media ? null : (F.img || PLACEHOLDER), duration: F.duration };
+    let msg;
+    if (F.id) { Object.assign(state.posts.find(p => p.id === F.id), data); msg = 'Cambios guardados'; }
+    else { state.posts.push({ id: 'p' + Date.now(), m: null, ...data }); msg = F.status === 'scheduled' ? `Programado para ${fmtDate(data.date)}` : 'Borrador guardado'; }
+    state.form = null; // evita revocar el blob que ahora usa el post
+    closeModal(); renderAll();
+    toast(msg, { icon: 'circle-check' });
+  }, 900);
+}
+
+/* ---------- Confirmación de borrado ---------- */
+function confirmDelete(id) {
+  const p = state.posts.find(x => x.id === id); if (!p) return;
+  openModal(`<div class="p-6 md:p-8 text-center">
+    <div class="grabber md:hidden -mt-4 mb-4"></div>
+    <span class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center bg-red-500/10 text-red-300 border border-red-500/30">${ico('trash-2', 'w-6 h-6')}</span>
+    <h2 class="font-display text-xl font-semibold mt-4">¿Eliminar esta publicación?</h2>
+    <p class="text-sm text-[#9AA0AE] mt-2">“${esc(p.title)}” se quitará del calendario. Podrás deshacerlo durante unos segundos.</p>
+    <div class="flex flex-col-reverse sm:flex-row gap-3 justify-center mt-6">
+      <button class="btn-ghost" data-action="close" data-autofocus>Cancelar</button>
+      <button class="btn-ghost !border-red-500/50 !text-red-200 hover:!bg-red-500/10" data-action="confirmDelete" data-id="${p.id}">${ico('trash-2', 'w-4 h-4')}Eliminar</button>
+    </div></div>`, { label: 'Confirmar eliminación' });
+  $('.sheet').classList.add('md:!max-w-md');
+}
+
+/* =========================================================
+   Toasts y notificaciones
+   ========================================================= */
+function toast(msg, { icon = 'circle-check', action, onAction, error = false } = {}) {
+  const el = document.createElement('div');
+  el.className = 'card glass w-full px-4 py-3 flex items-center gap-3 shadow-2xl rise';
+  el.innerHTML = `<span class="${error ? 'text-red-300' : 'text-[#D4AF37]'}">${ico(icon, 'w-5 h-5')}</span><span class="text-sm flex-1">${esc(msg)}</span>${action ? `<button class="text-sm font-bold text-[#F3E5AB] min-h-[44px] px-2">${esc(action)}</button>` : ''}`;
+  if (action) el.querySelector('button').onclick = () => { onAction(); el.remove(); };
+  $('#toasts').appendChild(el); icons();
+  setTimeout(() => { el.style.transition = 'opacity .3s, transform .3s'; el.style.opacity = '0'; el.style.transform = 'translateY(8px)'; setTimeout(() => el.remove(), 300); }, action ? 5500 : 3200);
+}
+function toggleNotif(force) {
+  const panel = $('#notifPanel'), open = force ?? panel.classList.contains('hidden');
+  if (open) {
+    const pub = state.posts.filter(p => p.status === 'published').sort((a, b) => b.m.views - a.m.views)[0];
+    const next = state.posts.filter(p => p.status === 'scheduled').sort((a, b) => a.date.localeCompare(b.date))[0];
+    const items = [
+      pub && ['trending-up', `“${pub.title}” superó ${fmtN(pub.m.views)} vistas`, 'Hace 2 h', `data-action="analytics" data-id="${pub.id}"`],
+      next && ['calendar-clock', `“${next.title}” ${relLabel(next.date).toLowerCase()}`, fmtDate(next.date), `data-action="edit" data-id="${next.id}"`],
+      ['sparkles', 'Pico de engagement en TikTok a las 21:00 HS', 'Insight semanal', 'data-action="view" data-view="analytics"'],
+    ].filter(Boolean);
+    panel.innerHTML = `<p class="px-3 pt-2 pb-1 text-[11px] uppercase tracking-[.2em] text-[#7D8394] font-bold">Notificaciones</p>` + items.map(([i, t, s, a]) => `
+      <button ${a} role="menuitem" class="w-full flex items-start gap-3 p-3 rounded-xl hover:bg-white/[.04] text-left transition">
+        <span class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background:rgba(212,175,55,.1);color:#D4AF37">${ico(i, 'w-4 h-4')}</span>
+        <span class="min-w-0"><span class="block text-sm leading-snug">${esc(t)}</span><span class="block text-[11px] text-[#7D8394] mt-0.5">${esc(s)}</span></span></button>`).join('');
+    icons();
+  }
+  panel.classList.toggle('hidden', !open);
+  $('#bellBtn').setAttribute('aria-expanded', open);
+}
+
+/* =========================================================
+   Eventos
+   ========================================================= */
+document.addEventListener('click', e => {
+  if (!e.target.closest('#notifPanel') && !e.target.closest('[data-action="notif"]')) toggleNotif(false);
+  if (e.target.matches('[data-overlay]')) return closeModal();
+  const t = e.target.closest('[data-action]'); if (!t || t.disabled) return;
+  const { action, id } = t.dataset;
+  switch (action) {
+    case 'net': state.network = t.dataset.net; renderAll(); break;
+    case 'status': state.status = t.dataset.status; renderAll(); break;
+    case 'view': closeModal(); toggleNotif(false); state.view = t.dataset.view; renderAll(); window.scrollTo({ top: 0, behavior: 'smooth' }); break;
+    case 'create': if (state.form) return; closeModal(); openEditor(null, t.dataset.day); break;
+    case 'edit': closeModal(); toggleNotif(false); openEditor(id); break;
+    case 'analytics': closeModal(); toggleNotif(false); openAnalytics(id); break;
+    case 'preview': closeModal(); openPreview(id); break;
+    case 'open': { const p = state.posts.find(x => x.id === id); p && p.status === 'published' ? openAnalytics(id) : openEditor(id); break; }
+    case 'duplicate': {
+      const p = state.posts.find(x => x.id === id); if (!p) return;
+      const copy = { ...p, id: 'p' + Date.now(), title: p.title + ' (copia)', status: 'draft', m: null, hashtags: [...p.hashtags] };
+      if (new Date(copy.date) < new Date()) { const d = new Date(); d.setDate(d.getDate() + 7); d.setHours(18, 30, 0, 0); copy.date = toISO(d); }
+      state.posts.push(copy); closeModal(); renderAll();
+      toast('Duplicado como borrador', { icon: 'copy', action: 'Editar', onAction: () => openEditor(copy.id) });
+      break;
+    }
+    case 'delete': confirmDelete(id); break;
+    case 'confirmDelete': {
+      const idx = state.posts.findIndex(x => x.id === id); if (idx < 0) return;
+      const [removed] = state.posts.splice(idx, 1); closeModal(); renderAll();
+      toast('Publicación eliminada', { icon: 'trash-2', action: 'Deshacer', onAction: () => { state.posts.splice(idx, 0, removed); renderAll(); } });
+      break;
+    }
+    case 'close': closeModal(); break;
+    case 'notif': toggleNotif(); break;
+    case 'profile': toast('AURA Media · Plan Prestige · 3 redes conectadas', { icon: 'crown' }); break;
+    case 'selday': state.selDay = t.dataset.day; renderView(); icons(); break;
+    case 'calnav': {
+      const c = state.calCursor, dir = +t.dataset.dir;
+      state.calCursor = state.calMode === 'month' ? new Date(c.getFullYear(), c.getMonth() + dir, 1) : new Date(c.getFullYear(), c.getMonth(), c.getDate() + dir * 7);
+      renderView(); icons(); break;
+    }
+    case 'caltoday': state.calCursor = new Date(TODAY); state.selDay = dayKey(TODAY); renderView(); icons(); break;
+    case 'calmode': state.calMode = t.dataset.mode; renderView(); icons(); break;
+    case 'sort': { const k = t.dataset.key; state.sort = { key: k, dir: state.sort.key === k ? -state.sort.dir : -1 }; renderView(); icons(); break; }
+    // Editor
+    case 'tab': setTab(t.dataset.tab); break;
+    case 'format': state.form.format = t.dataset.format; refreshEditor(); break;
+    case 'toggleStatus': state.form.status = state.form.status === 'scheduled' ? 'draft' : 'scheduled'; refreshEditor(); break;
+    case 'addtag': addTag(t.dataset.tag); refreshEditor(); break;
+    case 'rmtag': state.form.hashtags.splice(+t.dataset.i, 1); refreshEditor(); $('#tagInput').focus(); break;
+    case 'pickfile': $('#fileInput').click(); break;
+    case 'removefile': state.form.media = null; state.form.img = null; refreshEditor(); break;
+    case 'besttime': state.form.time = t.dataset.time; $('#fTime').value = t.dataset.time; updatePreview(); break;
+    case 'save': saveForm(); break;
+  }
+});
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.id === 'search') { state.search = el.value; renderView(); icons(); return; }
+  if (state.form && el.name && el.closest('#postForm')) {
+    state.form[el.name] = el.value;
+    if (el.name === 'caption') $('#capCount').textContent = `${el.value.length} / 2200`;
+    if (el.name === 'title' && el.value.trim()) { $('#errTitle').classList.add('hidden'); el.removeAttribute('aria-invalid'); }
+    updatePreview();
+  }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'fileInput') { handleFile(e.target.files[0]); e.target.value = ''; }
+  if (e.target.dataset.change === 'sortm') { state.sort = { key: e.target.value, dir: e.target.value === 'title' ? 1 : -1 }; renderView(); icons(); }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { if ($('#modalRoot').innerHTML) closeModal(); toggleNotif(false); }
+  if (e.target.id === 'tagInput') {
+    if (['Enter', ',', ' '].includes(e.key)) { e.preventDefault(); if (e.target.value.trim()) { addTag(e.target.value); e.target.value = ''; refreshEditor(); $('#tagInput').focus(); } }
+    else if (e.key === 'Backspace' && !e.target.value && state.form.hashtags.length) { state.form.hashtags.pop(); refreshEditor(); $('#tagInput').focus(); }
+  }
+  if (e.target.id === 'fTitle' && e.key === 'Enter') e.preventDefault();
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="button"][data-action]')) { e.preventDefault(); e.target.click(); }
+  // Trampa de foco simple dentro del modal
+  if (e.key === 'Tab' && $('#modalRoot .sheet')) {
+    const f = $$('#modalRoot button:not([disabled]), #modalRoot input:not([disabled]):not(.sr-only), #modalRoot textarea, #modalRoot select, #modalRoot [tabindex="0"]').filter(x => x.offsetParent !== null);
+    if (!f.length) return;
+    if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+  }
+});
+// Drag & drop
+['dragenter', 'dragover'].forEach(ev => document.addEventListener(ev, e => { const dz = e.target.closest && e.target.closest('#dropzone'); if (dz) { e.preventDefault(); dz.classList.add('drag'); } }));
+['dragleave', 'drop'].forEach(ev => document.addEventListener(ev, e => {
+  const dz = e.target.closest && e.target.closest('#dropzone'); if (!dz) return;
+  e.preventDefault(); dz.classList.remove('drag');
+  if (ev === 'drop') handleFile(e.dataTransfer.files[0]);
+}));
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop', e => e.preventDefault());
+// Fallback de imágenes rotas
+document.addEventListener('error', e => { const el = e.target; if (el.tagName === 'IMG' && !el.dataset.fb) { el.dataset.fb = '1'; el.src = PLACEHOLDER; } }, true);
+
+/* =========================================================
+   Init
+   ========================================================= */
+$('#todayLabel').textContent = `${DIAS_L[TODAY.getDay()]} ${TODAY.getDate()} de ${MES_L[TODAY.getMonth()]}, ${TODAY.getFullYear()}`;
+renderAll();
+window.addEventListener('load', icons);
+</script>
+</body>
+</html>
