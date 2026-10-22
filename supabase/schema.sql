@@ -127,11 +127,19 @@ create table if not exists public.social_accounts (
   token_expires_at         timestamptz,
   is_active                boolean not null default true,
   last_error               text check (char_length(last_error) <= 1000),
+  display_name             text check (char_length(display_name) <= 150),
+  avatar_url               text check (avatar_url is null or (avatar_url ~ '^https://' and char_length(avatar_url) <= 2000)),
   created_at               timestamptz not null default now(),
   updated_at               timestamptz not null default now(),
   constraint social_accounts_id_user_key unique (id, user_id),
   constraint social_accounts_external_key unique (user_id, platform, external_account_id)
 );
+
+-- Columnas agregadas después de la versión inicial (idempotente).
+alter table public.social_accounts add column if not exists display_name text
+  check (char_length(display_name) <= 150);
+alter table public.social_accounts add column if not exists avatar_url text
+  check (avatar_url is null or (avatar_url ~ '^https://' and char_length(avatar_url) <= 2000));
 
 -- 3.3 creative_app_connections -----------------------------------------------
 create table if not exists public.creative_app_connections (
@@ -474,7 +482,7 @@ grant update (full_name, avatar_url, timezone) on public.profiles to authenticat
 
 -- social_accounts: alta solo vía OAuth (servidor). Tokens nunca legibles.
 grant select (id, user_id, platform, account_handle, external_account_id, scopes,
-              token_expires_at, is_active, last_error, created_at, updated_at)
+              token_expires_at, is_active, last_error, created_at, updated_at, display_name, avatar_url)
   on public.social_accounts to authenticated;
 grant update (account_handle, is_active) on public.social_accounts to authenticated;
 grant delete on public.social_accounts to authenticated;
@@ -582,11 +590,11 @@ end $$;
 create or replace view public.my_connections
 with (security_invoker = true) as
   select id, 'social'::text as kind, platform::text as provider, account_handle as label,
-         is_active, token_expires_at, last_error, created_at
+         is_active, token_expires_at, last_error, created_at, display_name, avatar_url
     from public.social_accounts
   union all
   select id, 'creative', app_name::text, coalesce(external_account_id, app_name::text),
-         is_active, token_expires_at, null, created_at
+         is_active, token_expires_at, null, created_at, null, null
     from public.creative_app_connections;
 
 create or replace view public.post_analytics_latest
@@ -746,6 +754,45 @@ grant execute on function
   public.get_creative_connection_tokens(uuid, public.creative_app),
   public.claim_due_posts(integer),
   public.ai_quota_ok(uuid, integer)
+  to service_role;
+
+-- -----------------------------------------------------------------------------
+-- 9a. OAuth de redes sociales (vincular cuentas desde la app)
+-- -----------------------------------------------------------------------------
+-- Crea el "state" de un flujo OAuth (un solo uso, 10 minutos) con el
+-- code_verifier PKCE cifrado. Máx. 10 intentos cada 10 minutos por usuario.
+create or replace function public.create_oauth_state(
+  p_user_id uuid, p_provider text, p_code_verifier text, p_redirect_to text)
+returns text language plpgsql security definer set search_path = '' as $$
+declare v_state text := translate(encode(extensions.gen_random_bytes(32), 'base64'), '+/=', '-_');
+begin
+  if (select count(*) from public.oauth_states
+       where user_id = p_user_id and created_at > now() - interval '10 minutes') >= 10 then
+    raise exception 'rate_limited' using errcode = 'P0001';
+  end if;
+  delete from public.oauth_states where expires_at < now();
+  insert into public.oauth_states (state, user_id, provider, code_verifier_encrypted, redirect_to)
+  values (v_state, p_user_id, p_provider, private.encrypt_token(p_code_verifier), p_redirect_to);
+  return v_state;
+end $$;
+
+-- Consume (borra) el state y devuelve sus datos si no venció.
+create or replace function public.consume_oauth_state(p_state text)
+returns table (user_id uuid, provider text, code_verifier text, redirect_to text)
+language sql security definer set search_path = '' as $$
+  with d as (
+    delete from public.oauth_states s
+     where s.state = p_state and s.expires_at > now()
+    returning s.user_id, s.provider, s.code_verifier_encrypted, s.redirect_to
+  )
+  select d.user_id, d.provider, private.decrypt_token(d.code_verifier_encrypted), d.redirect_to from d;
+$$;
+
+revoke all on function public.create_oauth_state(uuid, text, text, text),
+                       public.consume_oauth_state(text)
+  from public, anon, authenticated;
+grant execute on function public.create_oauth_state(uuid, text, text, text),
+                          public.consume_oauth_state(text)
   to service_role;
 
 -- -----------------------------------------------------------------------------

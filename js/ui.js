@@ -336,6 +336,8 @@ const LEGAL = [['legal/terminos.html', 'Términos'], ['legal/privacidad.html', '
 const legalLinks = () => LEGAL.map(([href, t]) => `<a href="${href}" target="_blank" rel="noopener" class="underline underline-offset-2 hover:text-gold-light min-h-[24px] inline-flex items-center">${t}</a>`).join('');
 
 function renderAuth(mode) {
+  const cloud = Cloud.on;
+  if (cloud && mode === 'create') mode = 'signup';
   const first = mode === 'create';
   $('#auth').hidden = false; $('#app').hidden = true; $('#boot').hidden = true;
   $('#auth').innerHTML = `<div class="min-h-screen grid lg:grid-cols-[1.1fr_1fr]">
@@ -351,7 +353,7 @@ function renderAuth(mode) {
     <section class="flex items-center justify-center px-4 py-10">
       <form id="authForm" class="w-full max-w-md card p-6 md:p-9 flex flex-col gap-5" novalidate>
         <div class="lg:hidden flex items-center gap-3">${brandMark(42)}<div class="font-display font-bold tracking-[.14em] gold-text">${esc(App.settings.brand.toUpperCase())}</div></div>
-        <div><h2 class="font-display text-2xl md:text-3xl font-semibold">${first ? 'Creá tu acceso' : 'Iniciar sesión'}</h2>
+        ${cloud ? cloudAuthForm(mode) : `<div><h2 class="font-display text-2xl md:text-3xl font-semibold">${first ? 'Creá tu acceso' : 'Iniciar sesión'}</h2>
         <p class="text-sm text-muted mt-1.5">${first ? 'Elegí un usuario y una contraseña para proteger tu estudio.' : 'Ingresá con tu usuario y contraseña.'}</p></div>
         <div><label class="label" for="aUser">Usuario</label><input id="aUser" class="input" autocomplete="username" maxlength="40" value="${first ? '' : esc(Auth.record?.username || '')}" data-autofocus></div>
         ${pwField('aPass', 'Contraseña', first ? 'new-password' : 'current-password', first ? 'data-input="authStrength"' : '')}
@@ -360,13 +362,13 @@ function renderAuth(mode) {
         <p id="aErr" class="err hidden" role="alert"></p>
         <button class="btn-gold w-full" type="submit" id="aBtn">${ico(first ? 'shield-check' : 'log-in')}${first ? 'Crear acceso' : 'Entrar'}</button>
         ${first ? '' : `<button type="button" class="text-sm text-gold-light underline underline-offset-4 self-center min-h-[44px]" data-action="forgotPw">¿Olvidaste tu contraseña?</button>`}
-        <p class="text-[11px] text-dim leading-relaxed flex gap-2">${ico('lock', 'w-3.5 h-3.5 shrink-0 mt-0.5')}La contraseña se guarda cifrada (PBKDF2-SHA256), nunca en texto plano.</p>
+        <p class="text-[11px] text-dim leading-relaxed flex gap-2">${ico('lock', 'w-3.5 h-3.5 shrink-0 mt-0.5')}La contraseña se guarda cifrada (PBKDF2-SHA256), nunca en texto plano.</p>`}
         <p class="text-[11px] text-dim flex flex-wrap gap-x-4 gap-y-1">${first ? 'Al crear tu acceso aceptás los ' : ''}${legalLinks()}</p>
       </form>
     </section></div>`;
   icons();
-  $('#authForm').onsubmit = e => { e.preventDefault(); first ? doCreate() : doLogin(); };
-  setTimeout(() => (first || !Auth.record?.username ? $('#aUser') : $('#aPass')).focus(), 50);
+  $('#authForm').onsubmit = e => { e.preventDefault(); cloud ? cloudAuthSubmit(mode) : first ? doCreate() : doLogin(); };
+  setTimeout(() => (cloud ? $('#aEmail') || $('#aPass') : first || !Auth.record?.username ? $('#aUser') : $('#aPass'))?.focus(), 50);
 }
 Inputs.authStrength = el => paintStrength('aStr', el.value);
 function authErr(msg) { const e = $('#aErr'); e.textContent = msg; e.classList.toggle('hidden', !msg); }
@@ -397,7 +399,7 @@ Actions.forgotPw = async () => {
   if (!ok) return;
   Auth.record = null; Auth.endSession(); renderAuth('create');
 };
-Actions.logout = () => { Auth.endSession(); if (window.Editor) Editor.pause(); Modal.close(true); $('#drawer').innerHTML = ''; renderAuth('login'); toast('Sesión cerrada', { icon: 'log-out' }); };
+Actions.logout = () => { if (Cloud.on) Cloud.sb.auth.signOut({ scope: 'local' }).catch(e => reportError(e, 'signOut')); Auth.endSession(); if (window.Editor) Editor.pause(); Modal.close(true); $('#drawer').innerHTML = ''; renderAuth('login'); toast('Sesión cerrada', { icon: 'log-out' }); };
 
 /* Bloqueo automático por inactividad */
 let lastActivity = Date.now();
@@ -405,5 +407,5 @@ let lastActivity = Date.now();
 setInterval(() => {
   const min = +App.settings.autolock;
   if (!min || $('#app').hidden || (window.Editor && Editor.busy)) return;
-  if (Date.now() - lastActivity > min * 60000) { ssSet('him:session', null); try { localStorage.removeItem('him:remember'); } catch {} Modal.close(true); renderAuth('login'); toast('Sesión bloqueada por inactividad', { icon: 'lock' }); }
+  if (Date.now() - lastActivity > min * 60000) { if (Cloud.on) Cloud.sb.auth.signOut({ scope: 'local' }).catch(() => {}); ssSet('him:session', null); try { localStorage.removeItem('him:remember'); } catch {} Modal.close(true); renderAuth('login'); toast('Sesión bloqueada por inactividad', { icon: 'lock' }); }
 }, 30000);

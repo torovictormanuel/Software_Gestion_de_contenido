@@ -24,3 +24,6 @@ node_modules/
 .DS_Store
 Thumbs.db
 *.log
+
+# Configuración generada (scripts/build-config.mjs)
+js/config.js

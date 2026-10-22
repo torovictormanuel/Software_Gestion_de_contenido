@@ -598,13 +598,38 @@ const CONNECTORS = [
   ] },
 ];
 function connStatus(c) {
+  if (Cloud.on && c.net) {
+    const n = Cloud.accountsOf(c.net).length;
+    if (n) return [n > 1 ? `${n} cuentas conectadas` : 'Conectado', 'badge-up'];
+    if (!Cloud.social.loaded) return ['Cargando…', 'badge-muted'];
+    if (Cloud.social.providers[c.id] === false) return ['Falta configurar', 'badge-muted'];
+    return ['Sin conectar', 'badge-soft'];
+  }
   if (c.real === 'claude') return AI.ok ? ['Conectado', 'badge-up'] : ['Disponible en claude.ai', 'badge-muted'];
   if (c.real === 'gmail') return Conn.gmail.state === 'ok' ? ['Conectado', 'badge-up'] : Conn.gmail.state === 'error' ? ['Revisar conexión', 'badge-down'] : ['Listo para conectar', 'badge-soft'];
   if (App.settings.links?.[c.id]) return ['Perfil vinculado', 'badge-soft'];
   return ['Sin conectar', 'badge-muted'];
 }
+function socialAccounts(c) {
+  if (!Cloud.on || !c.net) return '';
+  const list = Cloud.accountsOf(c.net);
+  return list.length ? `<ul class="mt-4 flex flex-col gap-2">${list.map(a => `
+    <li class="well p-2.5 flex items-center gap-3">
+      ${a.avatar_url ? `<img src="${esc(a.avatar_url)}" alt="" class="w-9 h-9 rounded-full object-cover shrink-0" referrerpolicy="no-referrer" loading="lazy">` : `<span class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style="background:var(--gold-soft);color:var(--gold)">${esc(initials(a.display_name || a.label))}</span>`}
+      <div class="min-w-0 flex-1"><div class="text-sm font-semibold truncate">${esc(a.label)}</div><div class="text-[11px] ${a.last_error ? 'text-[var(--down)]' : 'text-dim'} truncate">${esc(a.last_error || a.display_name || 'Conectada ' + timeAgo(a.created_at))}</div></div>
+      <button class="icon-btn sm danger max-sm:min-w-[44px] max-sm:min-h-[44px]" data-action="socialDisconnect" data-id="${a.id}" aria-label="Desconectar ${esc(a.label)}">${ico('unlink')}</button>
+    </li>`).join('')}</ul>` : '';
+}
+function connButton(c, sl) {
+  if (Cloud.on && c.net) {
+    if (Cloud.social.providers[c.id] === false) return `<button class="btn-ghost btn-sm" data-action="connOpen" data-id="${c.id}">Detalles</button>`;
+    return `<button class="btn-gold btn-sm max-sm:min-h-[44px]" data-action="socialConnect" data-id="${c.id}" ${Cloud.social.loaded ? '' : 'disabled'}>${ico(Cloud.accountsOf(c.net).length ? 'plus' : 'link', 'w-3.5 h-3.5')}${Cloud.accountsOf(c.net).length ? 'Agregar cuenta' : 'Conectar'}</button>`;
+  }
+  return `<button class="btn-ghost btn-sm" data-action="connOpen" data-id="${c.id}">${c.real === 'claude' ? 'Detalles' : sl === 'Sin conectar' || sl === 'Listo para conectar' ? 'Conectar' : 'Gestionar'}</button>`;
+}
 RENDER.conexiones = el => {
-  const total = CONNECTORS.flatMap(g => g.items), on = total.filter(c => ['Conectado', 'Perfil vinculado'].includes(connStatus(c)[0])).length;
+  if (Cloud.on && Cloud.user && !Cloud.social.loaded && !Cloud.social.loading) Cloud.loadSocial().then(() => App.section === 'conexiones' && renderSection());
+  const total = CONNECTORS.flatMap(g => g.items), on = total.filter(c => /^(Conectado|Perfil vinculado|\d+ cuentas)/.test(connStatus(c)[0])).length;
   el.innerHTML = `${sectionHead('Conexiones', 'Plataformas e integraciones', `<span class="badge badge-soft">${ico('plug-zap')}${on} de ${total.length} activas</span>`)}
     ${CONNECTORS.map(g => `<section class="mb-8"><h2 class="text-[11px] tracking-[.22em] uppercase text-dim font-bold mb-3">${g.group}</h2>
       <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">${g.items.map(c => { const [sl, sc] = connStatus(c); return `
@@ -613,11 +638,15 @@ RENDER.conexiones = el => {
             <div class="min-w-0 flex-1"><h3 class="font-semibold">${c.name}</h3><p class="text-xs text-muted mt-0.5">${c.desc}</p></div></div>
           <div class="flex items-center justify-between gap-2 mt-4 pt-4 border-t border-white/5 mt-auto">
             <span class="badge ${sc}">${sl}</span>
-            <button class="btn-ghost btn-sm" data-action="connOpen" data-id="${c.id}">${c.real === 'claude' ? 'Detalles' : sl === 'Sin conectar' || sl === 'Listo para conectar' ? 'Conectar' : 'Gestionar'}</button>
+            ${connButton(c, sl)}
           </div>
+          ${socialAccounts(c)}
           ${c.id === 'gmail' && Conn.gmail.state === 'ok' ? gmailList() : ''}
         </article>`; }).join('')}</div></section>`).join('')}
-    <div class="card p-5 flex gap-3 text-sm text-muted">${ico('shield-check', 'w-5 h-5 text-gold shrink-0')}<p>Por seguridad, la app nunca te pide contraseñas ni claves API de otras plataformas. Las integraciones oficiales se autorizan con OAuth desde un servidor; lo que corre en tu navegador solo guarda el enlace a tu perfil.</p></div>`;
+    ${Cloud.social.error ? `<div class="card p-4 mb-4 text-sm text-[var(--down)] flex gap-2">${ico('circle-alert', 'w-4 h-4 shrink-0 mt-0.5')}${esc(Cloud.social.error)} <button class="underline ml-auto" data-action="socialReload">Reintentar</button></div>` : ''}
+    <div class="card p-5 flex gap-3 text-sm text-muted">${ico('shield-check', 'w-5 h-5 text-gold shrink-0')}<p>Por seguridad, la app nunca te pide contraseñas ni claves API de otras plataformas. ${Cloud.on ? 'Instagram, TikTok y YouTube se vinculan con su inicio de sesión oficial (OAuth): los permisos se guardan cifrados en el servidor y nunca llegan a tu navegador. Podés desconectarlos cuando quieras.' : 'Las integraciones oficiales se autorizan con OAuth desde un servidor; lo que corre en tu navegador solo guarda el enlace a tu perfil.'}</p></div>`;
+};
+Actions.socialReload = () => { Cloud.social.loaded = false; Cloud.social.error = ''; renderSection();
 };
 function gmailList() {
   const g = Conn.gmail;
@@ -689,8 +718,8 @@ RENDER.configuracion = el => {
       <form class="card p-5 md:p-7 flex flex-col gap-5" data-form="changePw" autocomplete="off">
         <h2 class="font-display text-lg font-semibold flex items-center gap-2">${ico('key-round', 'w-5 h-5 text-gold')}Seguridad y contraseña</h2>
         <div class="well p-4 flex items-center gap-3 text-sm"><span class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:var(--gold-soft);color:var(--gold)">${ico('user-check', 'w-5 h-5')}</span>
-          <div class="min-w-0"><div class="font-semibold">Usuario: ${esc(A?.username || '—')}</div><div class="text-xs text-dim">Contraseña actualizada ${A ? timeAgo(A.changedAt) : '—'}</div></div></div>
-        <input type="text" class="hidden" autocomplete="username" value="${esc(A?.username || '')}" aria-hidden="true" tabindex="-1">
+          <div class="min-w-0">${Cloud.on ? `<div class="font-semibold truncate">${esc(Cloud.user?.email || '—')}</div><div class="text-xs text-dim">Cuenta protegida con Supabase Auth</div>` : `<div class="font-semibold">Usuario: ${esc(A?.username || '—')}</div><div class="text-xs text-dim">Contraseña actualizada ${A ? timeAgo(A.changedAt) : '—'}</div>`}</div></div>
+        <input type="text" class="hidden" autocomplete="username" value="${esc(Cloud.on ? Cloud.user?.email || '' : A?.username || '')}" aria-hidden="true" tabindex="-1">
         ${pwField('pwCur', 'Contraseña actual')}
         ${pwField('pwNew', 'Nueva contraseña', 'new-password', 'data-input="newPwStrength"')}${strengthBar('pwStr')}
         ${pwField('pwNew2', 'Repetir nueva contraseña', 'new-password')}
@@ -709,7 +738,7 @@ RENDER.configuracion = el => {
       <section class="card p-5 md:p-7 flex flex-col gap-4">
         <h2 class="font-display text-lg font-semibold flex items-center gap-2">${ico('database', 'w-5 h-5 text-gold')}Datos</h2>
         <div class="flex items-center justify-between gap-4 min-h-[44px]"><div><div class="text-sm">Mostrar publicaciones de ejemplo</div><div class="text-xs text-dim">Ocultalas cuando cargues tu propio contenido</div></div><button class="switch" role="switch" aria-checked="${S.showDemo}" aria-label="Mostrar publicaciones de ejemplo" data-action="demoToggle"></button></div>
-        <div class="well p-4 text-sm text-muted flex gap-3">${ico(Store.mode === 'cloud' ? 'cloud' : 'hard-drive', 'w-5 h-5 text-gold shrink-0')}${Store.mode === 'cloud' ? 'Tus datos se guardan en tu cuenta de claude.ai, de forma privada: nadie más puede verlos.' : 'Tus datos se guardan solo en este navegador. Abrí la app en claude.ai para sincronizarlos en tu cuenta.'}</div>
+        <div class="well p-4 text-sm text-muted flex gap-3">${ico(Store.mode === 'cloud' ? 'cloud' : 'hard-drive', 'w-5 h-5 text-gold shrink-0')}${Store.mode === 'cloud' ? 'Tus datos se guardan en tu cuenta de claude.ai, de forma privada: nadie más puede verlos.' : Cloud.on ? 'Tu cuenta y tus redes conectadas viven en el servidor. Ideas, guiones, carruseles y borradores todavía se guardan en este navegador.' : 'Tus datos se guardan solo en este navegador. Abrí la app en claude.ai para sincronizarlos en tu cuenta.'}</div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">${[['Ideas', App.ideas.length], ['Guiones', App.scripts.length], ['Carruseles', App.carousels.length], ['Competidores', App.competitors.length]].map(([l, v]) => `<div class="well p-3"><div class="font-display text-xl font-semibold">${v}</div><div class="text-[11px] text-dim">${l}</div></div>`).join('')}</div>
         <div class="flex flex-wrap gap-3"><button class="btn-ghost" data-action="exportData">${ico('download', 'w-4 h-4 text-gold')}Exportar mis datos (JSON)</button><button class="btn-ghost btn-danger" data-action="deleteAccount">${ico('user-x', 'w-4 h-4')}Eliminar cuenta y datos</button></div>
         <p class="text-xs text-dim flex flex-wrap gap-x-4 gap-y-1">${legalLinks()}</p>
@@ -723,9 +752,11 @@ Actions.demoToggle = async el => { await saveSettings({ showDemo: !App.settings.
 Actions.deleteAccount = async () => {
   if (!await confirmBox({ title: '¿Eliminar tu cuenta y todos tus datos?', text: 'Se borran publicaciones, ideas, guiones, carruseles, competidores, configuración y tu acceso. No se puede deshacer. Si querés, exportá tus datos antes.', ok: 'Eliminar todo', danger: true, icon: 'user-x' })) return;
   try {
+    if (Cloud.on && Cloud.user) await Cloud.fn('delete-account', { confirm: 'ELIMINAR' });
     await Store.wipe();
     Object.assign(App, { userPosts: [], ideas: [], scripts: [], carousels: [], competitors: [], settings: { ...DEFAULT_SETTINGS } });
     Auth.record = null; Auth.endSession(); if (window.Editor) Editor.pause(); Modal.close(true);
+    if (Cloud.on) await Cloud.sb.auth.signOut({ scope: 'local' }).catch(() => {});
     renderAuth('create'); toast('Cuenta y datos eliminados', { icon: 'trash-2' });
   } catch (e) { reportError(e, 'deleteAccount'); toast('No se pudo eliminar todo. Intentá de nuevo.', { icon: 'circle-alert', error: true }); }
 };
@@ -749,6 +780,14 @@ const Forms = {
     if (n1.length < 8 || pwStrength(n1).lvl < 1) return err('La nueva contraseña debe tener al menos 8 caracteres y no ser débil.');
     if (n1 !== n2) return err('Las contraseñas nuevas no coinciden.');
     if (n1 === cur) return err('La nueva contraseña tiene que ser distinta de la actual.');
+    if (Cloud.on) {
+      const { error: e1 } = await Cloud.sb.auth.signInWithPassword({ email: Cloud.user.email, password: cur });
+      if (e1) return err('La contraseña actual no es correcta.');
+      const { error: e2 } = await Cloud.sb.auth.updateUser({ password: n1 });
+      if (e2) return err(authMessage(e2));
+      err(''); ['pwCur', 'pwNew', 'pwNew2'].forEach(id => $('#' + id).value = ''); paintStrength('pwStr', '');
+      return toast('Contraseña actualizada', { icon: 'shield-check' });
+    }
     if (!await Auth.verify(Auth.record.username, cur)) return err('La contraseña actual no es correcta.');
     try { await Auth.change(n1); Auth.startSession(false); err(''); ['pwCur', 'pwNew', 'pwNew2'].forEach(id => $('#' + id).value = ''); paintStrength('pwStr', ''); toast('Contraseña actualizada', { icon: 'shield-check' }); }
     catch { err('No se pudo guardar la nueva contraseña. Intentá de nuevo.'); }

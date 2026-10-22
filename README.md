@@ -17,18 +17,23 @@ legal/                   Privacidad, términos y cookies
 design/                  Tokens CSS y Tailwind del tema claro Ivory & Gold
 supabase/schema.sql      Esquema completo: tablas, ENUMs, índices, triggers, permisos, RLS, RPC, Storage
 supabase/cron.sql        Publicador cada 2 min + limpieza diaria
-supabase/functions/      publish-scheduled-posts · ai-generate · health · delete-account
-supabase/tests/          50 pruebas de RLS y permisos (PGlite)
+supabase/functions/      publish-scheduled-posts · ai-generate · social-auth · oauth-callback · health · delete-account
+supabase/tests/          59 pruebas de RLS y permisos (PGlite) · functions/tests: OAuth simulado (Deno)
 docs/BACKEND.md          Arquitectura, endpoints de integraciones y requisitos por plataforma
 ```
 
 ## Correr localmente
 
 ```bash
+node scripts/build-config.mjs
 python -m http.server 5173 --bind 127.0.0.1
 ```
 
-Abrí http://127.0.0.1:5173. Sin backend, los datos se guardan en el navegador.
+Abrí http://127.0.0.1:5173.
+
+- `build-config` lee `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` de `.env` y genera `js/config.js`.
+- Con esos datos, la app usa Supabase Auth y te deja vincular Instagram, TikTok y YouTube desde **Conexiones**.
+- Sin esos datos, funciona en modo local y los datos quedan en el navegador.
 
 ## Backend
 

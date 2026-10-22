@@ -5,7 +5,7 @@
 import { fetchJson, PlatformError, sleep } from "../http.ts";
 import { deferred, type PublishCtx, type PublishOutcome } from "./types.ts";
 
-const VERSION = Deno.env.get("META_GRAPH_VERSION") ?? "v23.0";
+const VERSION = Deno.env.get("META_GRAPH_VERSION") || "v26.0";
 const BASE = `https://graph.instagram.com/${VERSION}`;
 
 type ContainerStatus = "FINISHED" | "IN_PROGRESS" | "ERROR" | "EXPIRED" | "PUBLISHED";

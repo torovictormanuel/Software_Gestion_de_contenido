@@ -157,6 +157,36 @@ await denied('evento con nombre inválido', () => as('authenticated', A, `select
 await denied('A no ejecuta health_snapshot', () => as('authenticated', A, 'select health_snapshot()'));
 await ok('health_snapshot (service)', async () => (await as('service_role', null, 'select health_snapshot() as h')).rows[0].h.db === true);
 
+// ---- OAuth de redes ----
+await denied('A no puede crear oauth_state', () => as('authenticated', A, `select create_oauth_state($1,'instagram',null,'http://127.0.0.1:5173/')`, [A]));
+await denied('A no puede consumir oauth_state', () => as('authenticated', A, `select * from consume_oauth_state('x')`));
+let st;
+await ok('service crea state con verifier cifrado', async () => {
+  st = (await as('service_role', null, `select create_oauth_state($1,'youtube','VERIF-123','http://127.0.0.1:5173/') as s`, [A])).rows[0].s;
+  const raw = (await db.query('select code_verifier_encrypted from oauth_states where state=$1', [st])).rows[0].code_verifier_encrypted;
+  return /^[A-Za-z0-9_-]{43}$/.test(st) && !Buffer.from(raw).toString('latin1').includes('VERIF-123');
+});
+await ok('consume devuelve usuario, red y verifier', async () => {
+  const r = (await as('service_role', null, 'select * from consume_oauth_state($1)', [st])).rows[0];
+  return r.user_id === A && r.provider === 'youtube' && r.code_verifier === 'VERIF-123';
+});
+await ok('state de un solo uso', async () => (await as('service_role', null, 'select * from consume_oauth_state($1)', [st])).rows.length === 0);
+await ok('state vencido no sirve', async () => {
+  const s2 = (await as('service_role', null, `select create_oauth_state($1,'tiktok',null,'http://127.0.0.1:5173/') as s`, [A])).rows[0].s;
+  await db.query(`update oauth_states set expires_at = now() - interval '1 minute' where state=$1`, [s2]);
+  return (await as('service_role', null, 'select * from consume_oauth_state($1)', [s2])).rows.length === 0;
+});
+await denied('límite: máx. 10 intentos cada 10 min', async () => {
+  for (let i = 0; i < 11; i++) await as('service_role', null, `select create_oauth_state($1,'instagram',null,'http://127.0.0.1:5173/')`, [B]);
+}, /rate_limited/);
+await ok('perfil visible (display_name/avatar) y tokens no', async () => {
+  const id = (await as('service_role', null, `select upsert_social_account($1,'tiktok','@b','open-b','T','R', now()+interval '1 day', '{}') as id`, [B])).rows[0].id;
+  await db.query(`update social_accounts set display_name='B', avatar_url='https://x/a.jpg' where id=$1`, [id]);
+  const r = (await as('authenticated', B, 'select provider, label, display_name, avatar_url from my_connections')).rows;
+  return r.length === 1 && r[0].display_name === 'B' && r[0].avatar_url === 'https://x/a.jpg';
+});
+await denied('avatar sin https rechazado', () => db.query(`update social_accounts set avatar_url='http://x' where user_id=$1`, [B]), /violates/);
+
 await ok('re-ejecutar schema.sql (idempotente)', async () => { await db.exec(schema); return true; });
 
 console.log(`\n${pass} ok, ${fail} fallos`);

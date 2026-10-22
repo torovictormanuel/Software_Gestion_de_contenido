@@ -10,6 +10,11 @@
 | `supabase/cron.sql` | pg_cron + pg_net: publicador cada 2 min y limpieza diaria |
 | `supabase/functions/publish-scheduled-posts/` | Edge Function que publica en Instagram, TikTok y YouTube |
 | `supabase/functions/ai-generate/` | Edge Function de captions, hooks y hashtags con Claude |
+| `supabase/functions/social-auth/` | Vincular redes: lista de redes configuradas, inicio del OAuth y desconexión |
+| `supabase/functions/oauth-callback/` | Vuelta de Instagram, TikTok y YouTube: canjea el código y guarda los tokens cifrados |
+| `supabase/functions/health/`, `delete-account/` | Monitoreo de uptime y borrado de cuenta |
+| `supabase/migrations/` | Cambios incrementales (ya incluidos en `schema.sql`) |
+| `js/cloud.js` + `scripts/build-config.mjs` | Frontend: Supabase Auth, Conexiones y telemetría; config pública generada |
 | `supabase/functions/_shared/` | Cliente admin, tokens, HTTP y un módulo por red |
 | `.env.example` | Variables de entorno (plantilla sin valores) |
 
@@ -28,7 +33,7 @@
 
 ## Modelo de seguridad
 
-- **RLS en las 10 tablas.** Cada política compara `(select auth.uid())` con `user_id`.
+- **RLS en las 12 tablas.** Cada política compara `(select auth.uid())` con `user_id`.
   `oauth_states` y `webhook_events` tienen RLS sin políticas: solo `service_role`.
 - **Permisos por columna.** El navegador no puede leer `*_encrypted` ni escribir `status = published`,
   `external_post_id`, `attempts`, `publish_state`, el `role` del perfil, etc.
@@ -54,15 +59,45 @@ draft ──(usuario programa)──► scheduled ──(cron: claim_due_posts, 
 `publish_state` (jsonb, solo servidor) guarda ids de contenedor de Instagram, `publish_id` y la parte subida de TikTok,
 y la sesión reanudable de YouTube. Así un video largo se sube a lo largo de varias ejecuciones.
 
-## Integraciones creativas: endpoints
+## Vincular redes desde la app (implementado)
 
-Todas usan el mismo patrón de OAuth:
+```
+App (Conexiones) ──POST social-auth {start}──► crea oauth_states (state único, 10 min, PKCE en Google)
+      │                                        └─► devuelve la URL oficial de autorización
+      └──► instagram.com / tiktok.com / accounts.google.com  (el usuario acepta)
+                 └──► GET oauth-callback/{red}?code&state ──► consume el state (un solo uso)
+                         canjea el código (servidor) → perfil → upsert_social_account (AES-256)
+                         └──► 302 a la app ?conn=ok|error#conexiones  (sin tokens en la URL)
+```
 
-| Endpoint (Edge Function) | Auth | Qué hace |
+| Endpoint | Auth | Qué hace |
 |---|---|---|
-| `POST /oauth-start/:provider` | JWT usuario | Crea `oauth_states` (state + PKCE `code_verifier` cifrado, 10 min) y devuelve la URL de autorización |
-| `GET /oauth-callback/:provider` | `state` | Valida y consume el state, canjea el `code` por tokens y llama `upsert_social_account` o `upsert_creative_connection` |
-| `POST /connections/:id/disconnect` | JWT usuario | Revoca en el proveedor y borra la fila |
+| `POST /social-auth {action:"providers"}` | JWT | Qué redes tienen credenciales cargadas |
+| `POST /social-auth {action:"start", provider, redirect_to}` | JWT | Valida `redirect_to` contra `APP_URLS`, crea el state y devuelve la URL de autorización |
+| `GET /oauth-callback/{instagram\|tiktok\|youtube}` | `state` | Canjea el código, guarda tokens cifrados, nombre y avatar, y vuelve a la app |
+| `POST /social-auth {action:"disconnect", account_id}` | JWT | Revoca (TikTok y Google) y borra la cuenta; sus programados pasan a borrador |
+
+### Qué registrar en cada plataforma
+
+Redirect URI (uno por red, exacto):
+`https://<project-ref>.supabase.co/functions/v1/oauth-callback/{instagram|tiktok|youtube}`
+
+| Red | Dónde | Producto / API | Permisos (scopes) | Secretos en Supabase |
+|---|---|---|---|---|
+| Instagram | developers.facebook.com → App tipo **Business** → caso de uso "Administrar mensajes y contenido de Instagram" | Instagram API con login de Instagram (`graph.instagram.com`, v26.0) | `instagram_business_basic`, `instagram_business_content_publish`, `instagram_business_manage_insights` | `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET` |
+| TikTok | developers.tiktok.com → app web | Login Kit for Web + Content Posting API (Direct Post) | `user.info.basic`, `user.info.profile`, `video.publish` | `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET` |
+| YouTube | console.cloud.google.com → habilitar **YouTube Data API v3** → pantalla de consentimiento → credencial "Aplicación web" | OAuth 2.0 web + YouTube Data API v3 | `youtube.upload`, `youtube.readonly` | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
+
+Además: `APP_URLS` con el/los dominios de la app (por ejemplo `https://him.vercel.app,http://127.0.0.1:5173`).
+Mientras falten las credenciales de una red, la app muestra "Falta configurar" en esa tarjeta.
+
+En **Authentication → URL Configuration** de Supabase: *Site URL* = dominio de la app y agregar ese mismo
+dominio (y `http://127.0.0.1:5173` para desarrollo) en *Redirect URLs*. Lo usan la confirmación de email y la
+recuperación de contraseña.
+
+## Integraciones creativas (especificadas)
+
+Siguen el mismo patrón de OAuth (`oauth_states` → `oauth-callback` → `upsert_creative_connection`).
 
 | Herramienta | Mecanismo | Endpoint propio | Destino |
 |---|---|---|---|
@@ -72,8 +107,8 @@ Todas usan el mismo patrón de OAuth:
 | **Adobe Express Embed SDK** | 100 % en el navegador con un client ID público restringido por dominio. No guarda tokens | — (el front sube el resultado a Storage) | Quitar fondo y recortes 4:5 o 9:16: se sube a `<uid>/adobe/…` y se inserta en `media_assets` (`source = adobe`) |
 | **Anthropic Claude** | API key solo en secretos de la función, con rate limit por usuario (`ai_quota_ok`) | `POST /ai-generate` (implementada) | Devuelve `{caption, hooks[], hashtags[]}` y registra el uso en `ai_generations` |
 
-> Implementadas en este entregable: `publish-scheduled-posts` y `ai-generate`. Las demás están especificadas
-> (tablas, RPC y contratos listos) para la siguiente iteración.
+> Implementadas: `publish-scheduled-posts`, `ai-generate`, `social-auth`, `oauth-callback`, `health` y
+> `delete-account`. Canva, Figma, video corto y Adobe están especificados (tablas, RPC y contratos listos).
 
 ## Requisitos de cada plataforma (fuera del código)
 
@@ -89,4 +124,5 @@ Todas usan el mismo patrón de OAuth:
 
 ## Variables de entorno
 
-Ver `.env.example`. Solo las `VITE_*` pueden llegar al navegador.
+Ver `.env.example`. Al navegador solo llegan `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY`, a través de
+`js/config.js`, que genera `node scripts/build-config.mjs`. El script rechaza claves secretas o `service_role`.

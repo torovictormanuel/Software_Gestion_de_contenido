@@ -90,9 +90,11 @@ export function json(body: unknown, status = 200, headers: HeadersInit = {}): Re
   });
 }
 
-/** CORS restringido a los orígenes de ALLOWED_ORIGINS (coma-separados). */
+/** CORS restringido a ALLOWED_ORIGINS (o APP_URLS; por defecto solo el entorno local). */
 export function corsHeaders(req: Request): Record<string, string> {
-  const allowed = (Deno.env.get("ALLOWED_ORIGINS") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  const allowed = (Deno.env.get("ALLOWED_ORIGINS") || Deno.env.get("APP_URLS") ||
+    "http://127.0.0.1:5173,http://localhost:5173")
+    .split(",").map((s) => s.trim().replace(/\/$/, "")).filter(Boolean);
   const origin = req.headers.get("Origin") ?? "";
   const h: Record<string, string> = {
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",

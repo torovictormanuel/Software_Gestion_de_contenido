@@ -11,7 +11,7 @@ function enterApp() {
 
 (async function boot() {
   try {
-    await Promise.all([Store.init(), AI.init()]);
+    await Promise.all([Store.init(), AI.init(), Cloud.init().catch(e => reportError(e, 'cloud-init'))]);
     const s = await Store.getDoc('settings');
     if (s) App.settings = { ...DEFAULT_SETTINGS, ...s, notif: { ...DEFAULT_SETTINGS.notif, ...(s.notif || {}) }, links: { ...(s.links || {}) } };
     App.network = App.settings.defaultNet || 'all';
@@ -20,10 +20,19 @@ function enterApp() {
     App.userPosts = posts.filter(p => p && p.format && FORMATS[p.format]).map(p => ({ ...p, media: null, img: p.img || PLACEHOLDER }));
     App.ideas = ideas; App.scripts = scripts; App.carousels = carousels; App.competitors = competitors;
     await Editor.load();
-  } catch (e) { console.warn('boot', e); }
-  if (!Auth.record) renderAuth('create');
+  } catch (e) { reportError(e, 'boot'); }
+  const ret = consumeReturnParams();
+  if (Cloud.on) {
+    if (ret.recovery && Cloud.user) renderAuth('newpw');
+    else if (Cloud.user) { enterApp(); Cloud.loadSocial().then(() => App.section === 'conexiones' && renderSection()); }
+    else renderAuth('login');
+  } else if (!Auth.record) renderAuth('create');
   else if (Auth.hasSession()) enterApp();
   else renderAuth('login');
+  if (ret.notice) {
+    if (Cloud.user && !$('#app').hidden) go('conexiones');
+    toast(ret.notice.msg, { icon: ret.notice.ok ? 'check-circle-2' : 'circle-alert', error: !ret.notice.ok });
+  }
 })();
 
 /* ---------- Clicks ---------- */
