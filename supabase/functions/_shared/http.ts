@@ -70,7 +70,7 @@ export async function fetchJson<T = Record<string, unknown>>(
 function extractMessage(data: unknown): string | undefined {
   if (!data || typeof data !== "object") return;
   const d = data as Record<string, any>;
-  return d.error?.message ?? d.error_description ?? d.error?.code ?? d.message ??
+  return d.error?.message ?? d.error_message ?? d.error_description ?? d.error?.code ?? d.message ??
     (typeof d.error === "string" ? d.error : undefined);
 }
 

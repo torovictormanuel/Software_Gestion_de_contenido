@@ -8,7 +8,7 @@
 // =============================================================================
 import { adminClient } from "../_shared/admin.ts";
 import { PlatformError } from "../_shared/http.ts";
-import { exchange, type Provider, PROVIDERS } from "../_shared/oauth.ts";
+import { callbackUrl, exchange, type Provider, PROVIDERS } from "../_shared/oauth.ts";
 
 const FALLBACK = (Deno.env.get("APP_URLS") ?? "http://127.0.0.1:5173").split(",")[0].trim();
 
@@ -74,11 +74,13 @@ Deno.serve(async (req) => {
     const reason = e instanceof PlatformError && ["not_professional", "no_channel"].includes(msg)
       ? msg
       : msg.startsWith("save:") ? "save_failed" : "exchange_failed";
-    console.error(JSON.stringify({ level: "error", fn: "oauth-callback", provider, reason, error: msg.slice(0, 500) }));
+    const detail = (e instanceof PlatformError && e.opts.payload ? ` | ${JSON.stringify(e.opts.payload).slice(0, 500)}` : "") +
+      ` | redirect_uri=${callbackUrl(provider)} | ruta=${url.pathname}`;
+    console.error(JSON.stringify({ level: "error", fn: "oauth-callback", provider, reason, error: msg.slice(0, 500), detail }));
     await admin.from("error_reports").insert({
       source: "edge",
       context: `oauth-callback/${provider}`,
-      message: msg.slice(0, 1000),
+      message: (msg + detail).slice(0, 1000),
       user_id: st.user_id,
     }).then(() => {}, () => {});
     return back(appUrl, provider, "error", reason);

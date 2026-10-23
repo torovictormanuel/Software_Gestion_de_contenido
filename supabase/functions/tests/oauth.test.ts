@@ -78,6 +78,24 @@ Deno.test("Instagram: código → token corto → largo → perfil profesional",
   assert(!calls.some((c) => c.url.search.includes("LONG")), "el token largo no viaja en la URL");
 });
 
+Deno.test("Instagram: reintenta con la otra forma de la Redirect URI", async () => {
+  let n = 0;
+  const calls = mockFetch({
+    "https://api.instagram.com/oauth/access_token": (_u, init) => {
+      n++;
+      const r = new URLSearchParams(String(init.body)).get("redirect_uri")!;
+      return r.endsWith("/")
+        ? { access_token: "SHORT", user_id: "1" }
+        : new Response(JSON.stringify({ error_type: "OAuthException", code: 400, error_message: "Error validating verification code. Please make sure your redirect_uri is identical to the one you used in the OAuth dialog request" }), { status: 400 });
+    },
+    "https://graph.instagram.com/access_token": () => ({ access_token: "LONG", expires_in: 100 }),
+    "https://graph.instagram.com/v26.0/me": () => ({ user_id: "9", username: "him", account_type: "BUSINESS" }),
+  });
+  const a = await exchange("instagram", "C");
+  assert(n === 2 && a.externalId === "9", "reintento con barra final");
+  assert(new URLSearchParams(calls[1].body).get("redirect_uri") === callbackUrl("instagram") + "/", "variante con /");
+});
+
 Deno.test("Instagram: cuenta personal rechazada", async () => {
   mockFetch({
     "https://api.instagram.com/oauth/access_token": () => ({ access_token: "SHORT", user_id: "1" }),

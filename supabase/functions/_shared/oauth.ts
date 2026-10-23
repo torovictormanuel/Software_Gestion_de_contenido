@@ -107,6 +107,18 @@ export async function authorizeUrl(p: Provider, state: string, verifier?: string
 }
 
 // ---- Canje del código + perfil -------------------------------------------
+/** Etiqueta el paso que falló para que el log diga dónde (sin tokens). */
+async function step<T>(name: string, fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    if (e instanceof PlatformError) {
+      throw new PlatformError(`${name}: ${e.message}`, { ...e.opts });
+    }
+    throw new Error(`${name}: ${(e as Error)?.message ?? e}`);
+  }
+}
+
 const inSeconds = (s?: number) => (s ? new Date(Date.now() + s * 1000) : undefined);
 const https = (u?: string | null) => (u && /^https:\/\//.test(u) ? u.slice(0, 2000) : undefined);
 
@@ -119,16 +131,31 @@ export async function exchange(p: Provider, code: string, verifier?: string | nu
 async function exchangeInstagram(rawCode: string): Promise<ConnectedAccount> {
   const code = rawCode.replace(/#_$/, "");
   // 1) Código → token corto (1 h). La respuesta viene como {data:[{…}]} o plana.
-  const { data: short } = await fetchJson<any>("https://api.instagram.com/oauth/access_token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: id("instagram"),
-      client_secret: secret("instagram"),
-      grant_type: "authorization_code",
-      redirect_uri: callbackUrl("instagram"),
-      code,
-    }),
+  //    Meta a veces guarda la Redirect URI con "/" final y exige esa forma exacta
+  //    en el canje: si responde "redirect_uri ... identical", se reintenta una vez
+  //    con la otra variante (el código no se consume en un intento rechazado).
+  const codeFor = (redirect: string) =>
+    fetchJson<any>("https://api.instagram.com/oauth/access_token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: id("instagram"),
+        client_secret: secret("instagram"),
+        grant_type: "authorization_code",
+        redirect_uri: redirect,
+        code,
+      }),
+    });
+  const base = callbackUrl("instagram");
+  const { data: short } = await step("ig_code", async () => {
+    try {
+      return await codeFor(base);
+    } catch (e) {
+      if (!(e instanceof PlatformError) || !/redirect_uri/i.test(e.message)) throw e;
+      const alt = base.endsWith("/") ? base.slice(0, -1) : `${base}/`;
+      console.warn(JSON.stringify({ level: "warn", fn: "oauth", msg: "ig_redirect_retry", alt }));
+      return await codeFor(alt);
+    }
   });
   const s = Array.isArray(short?.data) ? short.data[0] : short;
   if (!s?.access_token) throw new PlatformError("Instagram no devolvió el token");
@@ -140,13 +167,14 @@ async function exchangeInstagram(rawCode: string): Promise<ConnectedAccount> {
     client_secret: secret("instagram"),
     access_token: s.access_token,
   }).toString();
-  const { data: long } = await fetchJson<{ access_token: string; expires_in: number }>(lu.toString());
+  const { data: long } = await step("ig_long_token", () =>
+    fetchJson<{ access_token: string; expires_in: number }>(lu.toString()));
 
   // 3) Perfil: user_id es el id de la cuenta profesional (<IG_ID>) que usa la publicación.
-  const { data: me } = await fetchJson<any>(
+  const { data: me } = await step("ig_profile", () => fetchJson<any>(
     `https://graph.instagram.com/${IG_VERSION}/me?fields=user_id,username,name,profile_picture_url,account_type`,
     { headers: { Authorization: `Bearer ${long.access_token}` } },
-  );
+  ));
   const accountType = String(me.account_type ?? "").toUpperCase();
   if (accountType && !["BUSINESS", "MEDIA_CREATOR", "CREATOR"].includes(accountType)) {
     throw new PlatformError("not_professional");
